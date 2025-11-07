@@ -53,12 +53,25 @@ function init() {
 // Make canvas responsive
 function resizeCanvas() {
     const container = canvas.parentElement;
-    const maxWidth = Math.min(400, window.innerWidth - 40);
-    const maxHeight = Math.min(400, window.innerHeight * 0.5);
-    const size = Math.min(maxWidth, maxHeight);
+    const isMobile = window.innerWidth <= 768;
     
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
+    if (isMobile) {
+        // On mobile, account for controls and footer
+        const maxWidth = Math.min(400, window.innerWidth - 30);
+        // Reserve space for controls (about 200px) and header/footer
+        const maxHeight = Math.min(400, (window.innerHeight - 350) * 0.9);
+        const size = Math.min(maxWidth, maxHeight);
+        
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+    } else {
+        const maxWidth = Math.min(400, window.innerWidth - 40);
+        const maxHeight = Math.min(400, window.innerHeight * 0.5);
+        const size = Math.min(maxWidth, maxHeight);
+        
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+    }
 }
 
 // Swipe gesture variables
@@ -496,116 +509,5 @@ function startGame() {
 // Initialize when page loads
 window.addEventListener('load', init);
 
-// Mouse interaction for background
-function initMouseInteraction() {
-    const mouseFollower = document.getElementById('mouseFollower');
-    const pattern1 = document.getElementById('pattern1');
-    const pattern2 = document.getElementById('pattern2');
-    let currentX = window.innerWidth / 2;
-    let currentY = window.innerHeight / 2;
-    let targetX = currentX;
-    let targetY = currentY;
-    
-    // Get center of viewport for distortion calculations
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-    
-    // Mouse move handler
-    document.addEventListener('mousemove', (e) => {
-        targetX = e.clientX;
-        targetY = e.clientY;
-    });
-    
-    // Smooth animation loop
-    function animate() {
-        // Smooth interpolation for mouse follower
-        currentX += (targetX - currentX) * 0.1;
-        currentY += (targetY - currentY) * 0.1;
-        
-        // Update mouse follower position
-        mouseFollower.style.left = currentX + 'px';
-        mouseFollower.style.top = currentY + 'px';
-        
-        // Calculate effective position (just mouse position)
-        const effectiveX = currentX;
-        const effectiveY = currentY;
-        
-        // Clamp transform origin to stay within viewport bounds
-        const mouseXPercent = Math.max(10, Math.min(90, (effectiveX / window.innerWidth) * 100));
-        const mouseYPercent = Math.max(10, Math.min(90, (effectiveY / window.innerHeight) * 100));
-        
-        pattern1.style.transformOrigin = `${mouseXPercent}% ${mouseYPercent}%`;
-        pattern2.style.transformOrigin = `${mouseXPercent}% ${mouseYPercent}%`;
-        
-        // Calculate position relative to viewport center for distortion direction
-        const mouseRelX = effectiveX - centerX;
-        const mouseRelY = effectiveY - centerY;
-        const mouseDistance = Math.sqrt(mouseRelX * mouseRelX + mouseRelY * mouseRelY);
-        
-        // Maximum effective distortion radius (200px around mouse - greater area)
-        const distortionRadius = 200;
-        const maxDistortionDistance = distortionRadius;
-        
-        // Calculate distortion strength - strongest at mouse, fades with distance
-        let distortionStrength = 0;
-        if (mouseDistance < maxDistortionDistance) {
-            const normalizedDist = mouseDistance / maxDistortionDistance;
-            distortionStrength = (1 - normalizedDist) * (1 - normalizedDist) * 2.5; // Increased from 2.0
-        } else {
-            distortionStrength = (maxDistortionDistance / mouseDistance) * 0.05;
-        }
-        
-        // Calculate angle for directional distortion
-        const angle = Math.atan2(mouseRelY, mouseRelX);
-        
-        // Create repulsion effect - MUCH stronger (increased from 60 to 90)
-        const repulsionStrength = distortionStrength * 90;
-        
-        // For pattern 1 (diagonal lines) - create strong bending/repulsion effect
-        const skewX1 = Math.sin(angle + Math.PI / 4) * repulsionStrength;
-        const skewY1 = Math.cos(angle + Math.PI / 4) * repulsionStrength;
-        
-        // 3D perspective for depth and bending
-        const perspective1 = 600;
-        const rotateX1 = (mouseRelY / window.innerHeight) * distortionStrength * 25;
-        const rotateY1 = -(mouseRelX / window.innerWidth) * distortionStrength * 25;
-        
-        // Scale creates expansion effect around mouse (clamped to prevent disappearing)
-        const scale1 = Math.min(1 + distortionStrength * 0.5, 2.0);
-        
-        // For pattern 2 (dot grid) - stronger distortion
-        const skewX2 = Math.cos(angle) * repulsionStrength;
-        const skewY2 = -Math.sin(angle) * repulsionStrength;
-        const rotateX2 = (mouseRelX / window.innerWidth) * distortionStrength * 22;
-        const rotateY2 = (mouseRelY / window.innerHeight) * distortionStrength * 22;
-        const scale2 = Math.min(1 + distortionStrength * 0.6, 2.2);
-        
-        // Apply transforms - the transform-origin makes this appear localized
-        pattern1.style.transform = `
-            perspective(${perspective1}px) 
-            rotateX(${rotateX1}deg) 
-            rotateY(${rotateY1}deg) 
-            skew(${skewX1}deg, ${skewY1}deg) 
-            scale(${scale1})
-        `;
-        pattern2.style.transform = `
-            perspective(${perspective1}px) 
-            rotateX(${rotateX2}deg) 
-            rotateY(${rotateY2}deg) 
-            skew(${skewX2}deg, ${skewY2}deg) 
-            scale(${scale2})
-        `;
-        
-        requestAnimationFrame(animate);
-    }
-    
-    // Initialize position
-    mouseFollower.style.left = currentX + 'px';
-    mouseFollower.style.top = currentY + 'px';
-    
-    animate();
-}
-
-// Initialize mouse interaction when page loads
-window.addEventListener('load', initMouseInteraction);
+// Background interaction is now in background.js
 
