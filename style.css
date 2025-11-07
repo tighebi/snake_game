@@ -450,10 +450,7 @@ body {
     }
     
     .site-footer {
-        padding: 20px 10px;
-        position: relative;
-        bottom: auto;
-        margin-top: 40px;
+        display: none; /* Hide footer on mobile to save space for controls */
     }
     
     .footer-content {
