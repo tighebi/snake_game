@@ -1,0 +1,162 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.game-container {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.game-header {
+    margin-bottom: 20px;
+}
+
+.game-header h1 {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.score-container {
+    display: flex;
+    justify-content: space-around;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#gameCanvas {
+    border: 3px solid #fff;
+    border-radius: 10px;
+    background-color: #1a1a2e;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.game-controls {
+    margin-top: 20px;
+    position: relative;
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    z-index: 10;
+    border: 2px solid #fff;
+    min-width: 300px;
+}
+
+.game-over h2 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #ff6b6b;
+}
+
+.game-over.hidden {
+    display: none;
+}
+
+.game-over-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #fff;
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s;
+}
+
+.tab-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tab-button.active {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: #4ecdc4;
+}
+
+.tab-content {
+    display: none;
+    min-height: 100px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+#high-scores-list {
+    text-align: center;
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.high-score-item {
+    padding: 8px;
+    margin: 5px auto;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    max-width: 250px;
+}
+
+.high-score-item .rank {
+    font-weight: bold;
+    color: #4ecdc4;
+    margin-right: 10px;
+}
+
+.high-score-item .score {
+    font-weight: bold;
+}
+
+.start-prompt {
+    margin-top: 15px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #4ecdc4;
+}
+
+.start-prompt.hidden {
+    display: none;
+}
+
+.instructions {
+    margin-top: 15px;
+    font-size: 1em;
+    opacity: 0.9;
+}
+

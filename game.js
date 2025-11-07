@@ -1,0 +1,358 @@
+// Game configuration
+const GRID_SIZE = 20;
+const CANVAS_WIDTH = 400;
+const CANVAS_HEIGHT = 400;
+const GRID_WIDTH = CANVAS_WIDTH / GRID_SIZE;
+const GRID_HEIGHT = CANVAS_HEIGHT / GRID_SIZE;
+
+// Game state
+let canvas, ctx;
+let snake = [];
+let direction = { x: 0, y: 0 };
+let nextDirection = { x: 0, y: 0 };
+let food = { x: 0, y: 0 };
+let score = 0;
+let highScore = 0;
+let highScores = [];
+let gameRunning = false;
+let gameStarted = false;
+let gameLoop = null;
+
+// Initialize game
+function init() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    
+    // Load high scores from localStorage
+    loadHighScores();
+    updateHighScoreDisplay();
+    
+    // Initialize snake
+    resetGame();
+    
+    // Event listeners
+    document.addEventListener('keydown', handleKeyPress);
+    
+    // Tab switching
+    setupTabs();
+    
+    // Start game loop
+    startGame();
+}
+
+// Setup tab switching
+function setupTabs() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.getAttribute('data-tab');
+            
+            // If restart button is clicked and game is over, reset and wait for direction
+            if (tabName === 'restart' && !gameRunning) {
+                resetGame();
+                return; // Don't switch tabs, just reset
+            }
+            
+            // Remove active class from all tabs and buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            button.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        });
+    });
+}
+
+// Load high scores from localStorage
+function loadHighScores() {
+    const saved = localStorage.getItem('snakeHighScores');
+    if (saved) {
+        highScores = JSON.parse(saved);
+        highScores.sort((a, b) => b - a); // Sort descending
+    } else {
+        highScores = [];
+    }
+    highScore = highScores.length > 0 ? highScores[0] : 0;
+    document.getElementById('high-score').textContent = highScore;
+}
+
+// Save high scores to localStorage
+function saveHighScores() {
+    localStorage.setItem('snakeHighScores', JSON.stringify(highScores));
+}
+
+// Update high score display in the tab
+function updateHighScoreDisplay() {
+    const list = document.getElementById('high-scores-list');
+    if (highScores.length === 0) {
+        list.innerHTML = '<p style="text-align: center; opacity: 0.7;">No scores yet!</p>';
+        return;
+    }
+    
+    // Show top 5 scores only
+    list.innerHTML = highScores.slice(0, 5).map((score, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        return `
+            <div class="high-score-item">
+                <span><span class="rank">${index + 1}.</span> ${medal}</span>
+                <span class="score">${score} points</span>
+            </div>
+        `;
+    }).join('');
+}
+
+// Reset game to initial state
+function resetGame() {
+    // Position snake in center, facing up (so all 4 directions are safe)
+    // Snake: head at (10, 10), body at (10, 11), tail at (10, 12)
+    snake = [
+        { x: 10, y: 10 },
+        { x: 10, y: 11 },
+        { x: 10, y: 12 }
+    ];
+    direction = { x: 0, y: 0 };
+    nextDirection = { x: 0, y: 0 };
+    score = 0;
+    gameRunning = false;
+    gameStarted = false;
+    document.getElementById('score').textContent = score;
+    document.getElementById('game-over').classList.add('hidden');
+    document.getElementById('start-prompt').classList.remove('hidden');
+    
+    // Reset to restart tab
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelector('[data-tab="restart"]').classList.add('active');
+    document.getElementById('restart-tab').classList.add('active');
+    
+    generateFood();
+}
+
+// Generate food at random position
+function generateFood() {
+    do {
+        food.x = Math.floor(Math.random() * GRID_WIDTH);
+        food.y = Math.floor(Math.random() * GRID_HEIGHT);
+    } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
+}
+
+// Handle keyboard input
+function handleKeyPress(e) {
+    // Check if it's an arrow key
+    const isArrowKey = e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                       e.key === 'ArrowLeft' || e.key === 'ArrowRight';
+    
+    // Check if game-over overlay is visible (game was lost)
+    const gameOverElement = document.getElementById('game-over');
+    const isGameOverVisible = !gameOverElement.classList.contains('hidden');
+    
+    // If game is not running and not started (initial start), wait for direction input
+    // But don't allow arrow keys if game-over overlay is visible (must click restart button first)
+    if (!gameRunning && !gameStarted && isArrowKey && !isGameOverVisible) {
+        // Prevent down arrow as initial direction (would cause immediate collision)
+        if (e.key === 'ArrowDown') {
+            return; // Ignore down arrow on initial start
+        }
+        // Start with the direction
+        startNewGame(e.key);
+        return;
+    }
+    
+    // If game is not running or not started, ignore other keys
+    if (!gameRunning || !gameStarted) return;
+    
+    // Prevent reversing into itself
+    switch(e.key) {
+        case 'ArrowUp':
+            if (direction.y === 0) nextDirection = { x: 0, y: -1 };
+            break;
+        case 'ArrowDown':
+            if (direction.y === 0) nextDirection = { x: 0, y: 1 };
+            break;
+        case 'ArrowLeft':
+            if (direction.x === 0) nextDirection = { x: -1, y: 0 };
+            break;
+        case 'ArrowRight':
+            if (direction.x === 0) nextDirection = { x: 1, y: 0 };
+            break;
+    }
+}
+
+// Start new game with initial direction
+function startNewGame(initialKey) {
+    // Prevent down arrow as initial direction (would cause immediate collision with tail)
+    if (initialKey === 'ArrowDown') {
+        return; // Don't start if down arrow is pressed
+    }
+    
+    gameStarted = true;
+    gameRunning = true;
+    document.getElementById('start-prompt').classList.add('hidden');
+    document.getElementById('game-over').classList.add('hidden');
+    
+    // Set initial direction based on key pressed
+    switch(initialKey) {
+        case 'ArrowUp':
+            direction = { x: 0, y: -1 };
+            nextDirection = { x: 0, y: -1 };
+            break;
+        case 'ArrowLeft':
+            direction = { x: -1, y: 0 };
+            nextDirection = { x: -1, y: 0 };
+            break;
+        case 'ArrowRight':
+            direction = { x: 1, y: 0 };
+            nextDirection = { x: 1, y: 0 };
+            break;
+        // ArrowDown is not allowed as initial direction
+    }
+}
+
+// Update game state
+function update() {
+    if (!gameRunning || !gameStarted) return;
+    
+    // Update direction
+    direction = { ...nextDirection };
+    
+    // Calculate new head position
+    const head = {
+        x: snake[0].x + direction.x,
+        y: snake[0].y + direction.y
+    };
+    
+    // Check wall collision
+    if (head.x < 0 || head.x >= GRID_WIDTH || 
+        head.y < 0 || head.y >= GRID_HEIGHT) {
+        gameOver();
+        return;
+    }
+    
+    // Check self collision
+    if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        gameOver();
+        return;
+    }
+    
+    // Add new head
+    snake.unshift(head);
+    
+    // Check food collision
+    if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        document.getElementById('score').textContent = score;
+        
+        // Update high score display (not the list, just the current high)
+        if (score > highScore) {
+            highScore = score;
+            document.getElementById('high-score').textContent = highScore;
+        }
+        
+        generateFood();
+    } else {
+        // Remove tail if no food eaten
+        snake.pop();
+    }
+}
+
+// Update high scores list
+function updateHighScores(newScore) {
+    // Add new score if it's high enough
+    if (highScores.length < 10 || newScore > highScores[highScores.length - 1]) {
+        highScores.push(newScore);
+        highScores.sort((a, b) => b - a); // Sort descending
+        highScores = highScores.slice(0, 10); // Keep top 10
+        saveHighScores();
+        
+        // Update display
+        highScore = highScores[0];
+        document.getElementById('high-score').textContent = highScore;
+        updateHighScoreDisplay();
+    }
+}
+
+// Render game
+function render() {
+    // Clear canvas
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    // Draw grid (optional, for visual aid)
+    ctx.strokeStyle = '#16213e';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= GRID_WIDTH; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * GRID_SIZE, 0);
+        ctx.lineTo(i * GRID_SIZE, CANVAS_HEIGHT);
+        ctx.stroke();
+    }
+    for (let i = 0; i <= GRID_HEIGHT; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * GRID_SIZE);
+        ctx.lineTo(CANVAS_WIDTH, i * GRID_SIZE);
+        ctx.stroke();
+    }
+    
+    // Draw food
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillRect(
+        food.x * GRID_SIZE + 2,
+        food.y * GRID_SIZE + 2,
+        GRID_SIZE - 4,
+        GRID_SIZE - 4
+    );
+    
+    // Draw snake
+    snake.forEach((segment, index) => {
+        if (index === 0) {
+            // Head
+            ctx.fillStyle = '#4ecdc4';
+        } else {
+            // Body
+            ctx.fillStyle = '#45b7b8';
+        }
+        ctx.fillRect(
+            segment.x * GRID_SIZE + 2,
+            segment.y * GRID_SIZE + 2,
+            GRID_SIZE - 4,
+            GRID_SIZE - 4
+        );
+    });
+}
+
+// Game over
+function gameOver() {
+    gameRunning = false;
+    gameStarted = false;
+    
+    // Add score to high scores if applicable
+    updateHighScores(score);
+    
+    // Reset to restart tab
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelector('[data-tab="restart"]').classList.add('active');
+    document.getElementById('restart-tab').classList.add('active');
+    
+    document.getElementById('game-over').classList.remove('hidden');
+    document.getElementById('start-prompt').classList.remove('hidden');
+}
+
+// Main game loop
+function gameStep() {
+    update();
+    render();
+}
+
+// Start game
+function startGame() {
+    if (gameLoop) {
+        clearInterval(gameLoop);
+    }
+    gameLoop = setInterval(gameStep, 150); // 150ms = ~6.67 FPS
+}
+
+// Initialize when page loads
+window.addEventListener('load', init);
+
