@@ -356,3 +356,38 @@ function startGame() {
 // Initialize when page loads
 window.addEventListener('load', init);
 
+// Mouse interaction for background
+function initMouseInteraction() {
+    const mouseFollower = document.getElementById('mouseFollower');
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+    
+    document.addEventListener('mousemove', (e) => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+    });
+    
+    // Smooth animation loop
+    function animate() {
+        // Smooth interpolation
+        currentX += (targetX - currentX) * 0.1;
+        currentY += (targetY - currentY) * 0.1;
+        
+        mouseFollower.style.left = currentX + 'px';
+        mouseFollower.style.top = currentY + 'px';
+        
+        requestAnimationFrame(animate);
+    }
+    
+    // Initialize position
+    mouseFollower.style.left = currentX + 'px';
+    mouseFollower.style.top = currentY + 'px';
+    
+    animate();
+}
+
+// Initialize mouse interaction when page loads
+window.addEventListener('load', initMouseInteraction);
+
