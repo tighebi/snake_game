@@ -36,14 +36,50 @@ body {
     transform-origin: center center;
 }
 
+/* Pattern 1: Diagonal lines */
+.bg-pattern-1 {
+    background-image: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 20px,
+            rgba(118, 75, 162, 0.03) 20px,
+            rgba(118, 75, 162, 0.03) 40px
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 20px,
+            rgba(102, 126, 234, 0.03) 20px,
+            rgba(102, 126, 234, 0.03) 40px
+        );
+    animation: patternMove1 20s linear infinite;
+    opacity: 0.6;
+    transition: transform 0.05s ease-out;
+    transform-origin: center center;
+    will-change: transform;
+}
+
+/* Pattern 2: Dot grid */
+.bg-pattern-2 {
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(118, 75, 162, 0.15) 1px, transparent 0);
+    background-size: 50px 50px;
+    animation: patternMove2 30s linear infinite;
+    opacity: 0.4;
+    transition: transform 0.05s ease-out;
+    transform-origin: center center;
+    will-change: transform;
+}
+
 .bg-gradient {
     background: linear-gradient(
         45deg,
-        rgba(102, 126, 234, 0.3) 0%,
-        rgba(118, 75, 162, 0.3) 25%,
-        rgba(102, 126, 234, 0.3) 50%,
-        rgba(118, 75, 162, 0.3) 75%,
-        rgba(102, 126, 234, 0.3) 100%
+        rgba(102, 126, 234, 0.2) 0%,
+        rgba(118, 75, 162, 0.2) 25%,
+        rgba(102, 126, 234, 0.2) 50%,
+        rgba(118, 75, 162, 0.2) 75%,
+        rgba(102, 126, 234, 0.2) 100%
     );
     background-size: 300% 300%;
     animation: gradientShift 10s ease infinite;
@@ -60,15 +96,16 @@ body {
 
 .mouse-follower {
     position: absolute;
-    width: 400px;
-    height: 400px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(118, 75, 162, 0.3) 0%, rgba(102, 126, 234, 0.2) 40%, transparent 70%);
+    background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, rgba(102, 126, 234, 0.03) 40%, transparent 70%);
     pointer-events: none;
     transform: translate(-50%, -50%);
     transition: transform 0.1s ease-out, opacity 0.3s ease;
     z-index: 0;
-    filter: blur(40px);
+    filter: blur(20px);
+    opacity: 0.4;
 }
 
 @keyframes gradientShift {
@@ -80,6 +117,24 @@ body {
     }
     100% {
         background-position: 0% 0%;
+    }
+}
+
+@keyframes patternMove1 {
+    0% {
+        background-position: 0 0, 0 0;
+    }
+    100% {
+        background-position: 40px 40px, -40px -40px;
+    }
+}
+
+@keyframes patternMove2 {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 50px 50px;
     }
 }
 
@@ -284,9 +339,9 @@ body {
     font-size: 0.85em;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    opacity: 0.7;
+    opacity: 0.8;
     margin: 0;
-    font-weight: 300;
+    font-weight: 600;
 }
 
 .footer-link {
@@ -295,9 +350,10 @@ body {
     font-size: 0.95em;
     letter-spacing: 0.3px;
     transition: all 0.3s ease;
-    opacity: 0.9;
+    opacity: 0.95;
     pointer-events: auto;
     position: relative;
+    font-weight: 600;
 }
 
 .footer-link::after {
@@ -329,24 +385,42 @@ body {
 .footer-credit {
     font-size: 0.85em;
     letter-spacing: 0.5px;
-    opacity: 0.7;
+    opacity: 0.8;
     margin: 0;
-    font-weight: 300;
+    font-weight: 600;
 }
 
 .footer-name {
-    font-weight: 500;
-    opacity: 1;
-    color: rgba(0, 0, 0, 0.9);
+    font-weight: 600;
+    opacity: 0.8;
+    color: #fff;
 }
 
 .footer-copyright {
     font-size: 0.75em;
     letter-spacing: 1px;
-    opacity: 0.6;
+    opacity: 0.7;
     margin: 0;
-    font-weight: 300;
+    font-weight: 600;
     text-transform: uppercase;
+}
+
+.footer-sponsor {
+    font-size: 0.75em;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin: 0;
+    font-weight: 600;
+}
+
+.footer-sponsor-name {
+    font-size: 0.9em;
+    letter-spacing: 0.3px;
+    opacity: 0.95;
+    margin: 0;
+    font-weight: 600;
+    color: rgba(204, 0, 0, 0.95);
 }
 
 @media (max-width: 768px) {
