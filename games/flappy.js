@@ -11,9 +11,11 @@ const FlappyGame = {
     animationId: null,
     pipeWidth: 60,
     pipeGap: 150,
-    pipeSpeed: 2,
+    pipeSpeed: 3.5, // Start faster
+    basePipeSpeed: 3.5,
     pipeSpawnRate: 120,
     frameCount: 0,
+    speedIncreaseRate: 0.002, // Speed increases over time
     
     init() {
         this.canvas = document.getElementById('gameCanvas');
@@ -42,6 +44,7 @@ const FlappyGame = {
         this.gameStarted = false;
         this.frameCount = 0;
         this.pipes = [];
+        this.pipeSpeed = this.basePipeSpeed; // Reset speed
         
         // Reset bird
         this.bird.y = this.canvas.height / 2;
@@ -104,6 +107,9 @@ const FlappyGame = {
         
         this.frameCount++;
         
+        // Gradually increase speed
+        this.pipeSpeed = this.basePipeSpeed + (this.frameCount * this.speedIncreaseRate);
+        
         // Update bird
         this.bird.velocity += this.bird.gravity;
         this.bird.y += this.bird.velocity;
@@ -118,8 +124,9 @@ const FlappyGame = {
             return;
         }
         
-        // Spawn pipes
-        if (this.frameCount % this.pipeSpawnRate === 0) {
+        // Spawn pipes (slightly faster spawn rate as speed increases)
+        const currentSpawnRate = Math.max(80, this.pipeSpawnRate - Math.floor(this.pipeSpeed * 2));
+        if (this.frameCount % currentSpawnRate === 0) {
             this.spawnPipe();
         }
         
@@ -202,58 +209,126 @@ const FlappyGame = {
     },
     
     render() {
-        // Clear canvas with sky gradient
+        // Clear canvas with sky gradient (more vibrant)
         const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(1, '#E0F6FF');
+        gradient.addColorStop(0, '#4A90E2');
+        gradient.addColorStop(0.5, '#87CEEB');
+        gradient.addColorStop(1, '#B0E0E6');
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw ground
-        this.ctx.fillStyle = '#8B4513';
-        this.ctx.fillRect(0, this.canvas.height - 20, this.canvas.width, 20);
-        this.ctx.fillStyle = '#90EE90';
-        this.ctx.fillRect(0, this.canvas.height - 20, this.canvas.width, 5);
+        // Draw clouds (simple)
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        for (let i = 0; i < 3; i++) {
+            const cloudX = (this.frameCount * 0.2 + i * 200) % (this.canvas.width + 100) - 50;
+            const cloudY = 50 + i * 80;
+            this.ctx.beginPath();
+            this.ctx.arc(cloudX, cloudY, 20, 0, Math.PI * 2);
+            this.ctx.arc(cloudX + 25, cloudY, 25, 0, Math.PI * 2);
+            this.ctx.arc(cloudX + 50, cloudY, 20, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
         
-        // Draw pipes
-        this.ctx.fillStyle = '#228B22';
+        // Draw pipes with better visuals
         this.pipes.forEach(pipe => {
+            // Pipe gradient
+            const pipeGradient = this.ctx.createLinearGradient(pipe.x, 0, pipe.x + this.pipeWidth, 0);
+            pipeGradient.addColorStop(0, '#228B22');
+            pipeGradient.addColorStop(0.5, '#32CD32');
+            pipeGradient.addColorStop(1, '#228B22');
+            
             // Top pipe
+            this.ctx.fillStyle = pipeGradient;
             this.ctx.fillRect(pipe.x, 0, this.pipeWidth, pipe.topHeight);
+            this.ctx.strokeStyle = '#1a5f1a';
+            this.ctx.lineWidth = 2;
             this.ctx.strokeRect(pipe.x, 0, this.pipeWidth, pipe.topHeight);
             
+            // Top pipe cap
+            this.ctx.fillStyle = '#32CD32';
+            this.ctx.fillRect(pipe.x - 5, pipe.topHeight - 25, this.pipeWidth + 10, 25);
+            this.ctx.strokeStyle = '#1a5f1a';
+            this.ctx.strokeRect(pipe.x - 5, pipe.topHeight - 25, this.pipeWidth + 10, 25);
+            
             // Bottom pipe
+            this.ctx.fillStyle = pipeGradient;
             this.ctx.fillRect(pipe.x, pipe.bottomY, this.pipeWidth, this.canvas.height - pipe.bottomY);
+            this.ctx.strokeStyle = '#1a5f1a';
             this.ctx.strokeRect(pipe.x, pipe.bottomY, this.pipeWidth, this.canvas.height - pipe.bottomY);
             
-            // Pipe caps
+            // Bottom pipe cap
             this.ctx.fillStyle = '#32CD32';
-            this.ctx.fillRect(pipe.x - 5, pipe.topHeight - 20, this.pipeWidth + 10, 20);
-            this.ctx.fillRect(pipe.x - 5, pipe.bottomY, this.pipeWidth + 10, 20);
-            this.ctx.fillStyle = '#228B22';
+            this.ctx.fillRect(pipe.x - 5, pipe.bottomY, this.pipeWidth + 10, 25);
+            this.ctx.strokeStyle = '#1a5f1a';
+            this.ctx.strokeRect(pipe.x - 5, pipe.bottomY, this.pipeWidth + 10, 25);
         });
         
-        // Draw bird
-        this.ctx.fillStyle = '#FFD700';
+        // Draw ground with texture
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillRect(0, this.canvas.height - 25, this.canvas.width, 25);
+        this.ctx.fillStyle = '#90EE90';
+        this.ctx.fillRect(0, this.canvas.height - 25, this.canvas.width, 8);
+        // Grass texture
+        this.ctx.strokeStyle = '#7CB342';
+        this.ctx.lineWidth = 1;
+        for (let i = 0; i < this.canvas.width; i += 5) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(i, this.canvas.height - 25);
+            this.ctx.lineTo(i + 2, this.canvas.height - 30);
+            this.ctx.stroke();
+        }
+        
+        // Draw bird with better visuals
+        const birdX = this.bird.x + this.bird.width / 2;
+        const birdY = this.bird.y + this.bird.height / 2;
+        const rotation = Math.min(Math.max(this.bird.velocity * 0.15, -0.5), 0.5);
+        
+        this.ctx.save();
+        this.ctx.translate(birdX, birdY);
+        this.ctx.rotate(rotation);
+        
+        // Bird body gradient
+        const birdGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.bird.width / 2);
+        birdGradient.addColorStop(0, '#FFD700');
+        birdGradient.addColorStop(0.7, '#FFA500');
+        birdGradient.addColorStop(1, '#FF8C00');
+        
+        // Bird body
+        this.ctx.fillStyle = birdGradient;
         this.ctx.beginPath();
-        this.ctx.ellipse(
-            this.bird.x + this.bird.width / 2,
-            this.bird.y + this.bird.height / 2,
-            this.bird.width / 2,
-            this.bird.height / 2,
-            this.bird.velocity * 0.1, // Slight rotation based on velocity
-            0,
-            Math.PI * 2
-        );
+        this.ctx.ellipse(0, 0, this.bird.width / 2, this.bird.height / 2, 0, 0, Math.PI * 2);
         this.ctx.fill();
-        this.ctx.strokeStyle = '#FFA500';
+        
+        // Bird outline
+        this.ctx.strokeStyle = '#FF8C00';
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
         
-        // Bird eye
+        // Bird wing
+        this.ctx.fillStyle = '#FFA500';
+        this.ctx.beginPath();
+        this.ctx.ellipse(-5, 0, 8, 12, -0.3, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.restore();
+        
+        // Bird eye (after rotation)
         this.ctx.fillStyle = '#000';
         this.ctx.beginPath();
-        this.ctx.arc(this.bird.x + this.bird.width * 0.7, this.bird.y + this.bird.height * 0.3, 3, 0, Math.PI * 2);
+        this.ctx.arc(birdX + 5, birdY - 8, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#FFF';
+        this.ctx.beginPath();
+        this.ctx.arc(birdX + 6, birdY - 9, 1, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Bird beak
+        this.ctx.fillStyle = '#FF8C00';
+        this.ctx.beginPath();
+        this.ctx.moveTo(birdX + this.bird.width / 2 - 3, birdY);
+        this.ctx.lineTo(birdX + this.bird.width / 2 + 5, birdY - 2);
+        this.ctx.lineTo(birdX + this.bird.width / 2 + 5, birdY + 2);
+        this.ctx.closePath();
         this.ctx.fill();
     },
     

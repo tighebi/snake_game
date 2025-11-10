@@ -24,6 +24,14 @@
                 <span>High Score: <span id="high-score">0</span></span>
                 <span>Lives: <span id="lives">3</span></span>
             </div>
+            <div style="margin-top: 10px;">
+                <label for="difficulty-selector" style="margin-right: 10px;">Difficulty:</label>
+                <select id="difficulty-selector" style="padding: 5px; background: rgba(118, 75, 162, 0.3); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 5px;">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
         </div>
         <canvas id="gameCanvas" width="600" height="400"></canvas>
         <div class="game-controls">

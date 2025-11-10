@@ -1,4 +1,4 @@
-// 2048 Game
+// 2048 Game with Slide Animations
 const Game2048 = {
     grid: [],
     score: 0,
@@ -7,6 +7,8 @@ const Game2048 = {
     won: false,
     gridElement: null,
     SIZE: 4,
+    animating: false,
+    oldGridState: null,
     
     init() {
         this.gridElement = document.getElementById('grid');
@@ -30,6 +32,7 @@ const Game2048 = {
         this.score = 0;
         this.gameOver = false;
         this.won = false;
+        this.oldGridState = null;
         
         // Add two random tiles
         this.addRandomTile();
@@ -65,36 +68,34 @@ const Game2048 = {
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (this.gameOver && !this.won) return;
+            if (this.animating) return;
             
             let moved = false;
             switch(e.key) {
                 case 'ArrowUp':
                 case 'w':
                 case 'W':
-                    moved = this.move('up');
+                    moved = this.performMove('up');
                     break;
                 case 'ArrowDown':
                 case 's':
                 case 'S':
-                    moved = this.move('down');
+                    moved = this.performMove('down');
                     break;
                 case 'ArrowLeft':
                 case 'a':
                 case 'A':
-                    moved = this.move('left');
+                    moved = this.performMove('left');
                     break;
                 case 'ArrowRight':
                 case 'd':
                 case 'D':
-                    moved = this.move('right');
+                    moved = this.performMove('right');
                     break;
             }
             
             if (moved) {
                 e.preventDefault();
-                this.addRandomTile();
-                this.updateDisplay();
-                this.checkGameState();
             }
         });
         
@@ -106,6 +107,7 @@ const Game2048 = {
         
         this.gridElement.addEventListener('touchend', (e) => {
             if (this.gameOver && !this.won) return;
+            if (this.animating) return;
             
             const touchEndX = e.changedTouches[0].clientX;
             const touchEndY = e.changedTouches[0].clientY;
@@ -113,21 +115,14 @@ const Game2048 = {
             const deltaY = touchEndY - touchStartY;
             const minSwipe = 30;
             
-            let moved = false;
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
                 if (Math.abs(deltaX) > minSwipe) {
-                    moved = this.move(deltaX > 0 ? 'right' : 'left');
+                    this.performMove(deltaX > 0 ? 'right' : 'left');
                 }
             } else {
                 if (Math.abs(deltaY) > minSwipe) {
-                    moved = this.move(deltaY > 0 ? 'down' : 'up');
+                    this.performMove(deltaY > 0 ? 'down' : 'up');
                 }
-            }
-            
-            if (moved) {
-                this.addRandomTile();
-                this.updateDisplay();
-                this.checkGameState();
             }
         }, { passive: true });
     },
@@ -151,8 +146,36 @@ const Game2048 = {
         });
     },
     
+    performMove(direction) {
+        if (this.animating) return false;
+        
+        // Save old state
+        this.oldGridState = this.grid.map(row => [...row]);
+        
+        // Perform move
+        const moved = this.move(direction);
+        
+        if (!moved) {
+            this.oldGridState = null;
+            return false;
+        }
+        
+        this.animating = true;
+        
+        // Animate and then add new tile
+        this.animateMove(() => {
+            this.addRandomTile();
+            this.updateDisplay();
+            this.checkGameState();
+            this.animating = false;
+            this.oldGridState = null;
+        });
+        
+        return true;
+    },
+    
     move(direction) {
-        const previousGrid = this.grid.map(row => [...row]);
+        const oldGrid = this.grid.map(row => [...row]);
         let moved = false;
         
         if (direction === 'left') {
@@ -195,15 +218,19 @@ const Game2048 = {
             }
         }
         
-        // Check if grid changed
+        // Check if moved
         for (let r = 0; r < this.SIZE; r++) {
             for (let c = 0; c < this.SIZE; c++) {
-                if (this.grid[r][c] !== previousGrid[r][c]) {
+                if (this.grid[r][c] !== oldGrid[r][c]) {
                     moved = true;
                     break;
                 }
             }
             if (moved) break;
+        }
+        
+        if (!moved) {
+            this.grid = oldGrid;
         }
         
         return moved;
@@ -222,6 +249,144 @@ const Game2048 = {
             }
         }
         return merged;
+    },
+    
+    animateMove(callback) {
+        if (!this.oldGridState) {
+            this.updateDisplay();
+            if (callback) callback();
+            return;
+        }
+        
+        // Create movement tracking
+        const movements = this.calculateTileMovements();
+        
+        // Update display first
+        this.updateDisplay();
+        
+        // Animate after DOM update
+        requestAnimationFrame(() => {
+            const tiles = this.gridElement.querySelectorAll('.tile');
+            const tileSize = 110;
+            let hasAnimations = false;
+            
+            movements.forEach(move => {
+                const tileIndex = move.toR * this.SIZE + move.toC;
+                const tile = tiles[tileIndex];
+                
+                if (tile && (move.deltaX !== 0 || move.deltaY !== 0)) {
+                    hasAnimations = true;
+                    const deltaX = move.deltaX * tileSize;
+                    const deltaY = move.deltaY * tileSize;
+                    
+                    // Set initial transform
+                    tile.style.transform = `translate(${-deltaX}px, ${-deltaY}px)`;
+                    tile.style.transition = 'none';
+                    tile.classList.add('sliding');
+                    
+                    // Force reflow
+                    tile.offsetHeight;
+                    
+                    // Animate to final position
+                    requestAnimationFrame(() => {
+                        tile.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+                        tile.style.transform = 'translate(0, 0)';
+                    });
+                } else if (tile && move.isNew) {
+                    // New tile animation
+                    tile.classList.add('tile-new');
+                }
+            });
+            
+            // Cleanup after animation
+            const delay = hasAnimations ? 200 : 50;
+            setTimeout(() => {
+                tiles.forEach(tile => {
+                    tile.style.transform = '';
+                    tile.style.transition = '';
+                    tile.classList.remove('sliding', 'tile-new');
+                });
+                if (callback) callback();
+            }, delay);
+        });
+    },
+    
+    calculateTileMovements() {
+        if (!this.oldGridState) return [];
+        
+        const movements = [];
+        const usedOldPositions = new Set();
+        
+        // Track movements: for each new position, find where it came from
+        for (let newR = 0; newR < this.SIZE; newR++) {
+            for (let newC = 0; newC < this.SIZE; newC++) {
+                const newValue = this.grid[newR][newC];
+                const oldValue = this.oldGridState[newR][newC];
+                
+                if (newValue === 0) continue;
+                
+                // Check if this is a new tile (was empty before)
+                if (oldValue === 0) {
+                    movements.push({
+                        toR: newR,
+                        toC: newC,
+                        deltaX: 0,
+                        deltaY: 0,
+                        isNew: true
+                    });
+                    continue;
+                }
+                
+                // Check if value changed (merge happened)
+                if (newValue !== oldValue && newValue === oldValue * 2) {
+                    // This is a merged tile - find the two source tiles
+                    movements.push({
+                        toR: newR,
+                        toC: newC,
+                        deltaX: 0,
+                        deltaY: 0,
+                        isMerged: true,
+                        isNew: true
+                    });
+                    continue;
+                }
+                
+                // Check if tile moved from a different position
+                if (newValue === oldValue) {
+                    // Tile didn't move or change
+                    continue;
+                }
+                
+                // Find source position for moved tiles
+                // Look for this value in old grid that's not at current position
+                for (let oldR = 0; oldR < this.SIZE; oldR++) {
+                    for (let oldC = 0; oldC < this.SIZE; oldC++) {
+                        const key = `${oldR}-${oldC}`;
+                        if (this.oldGridState[oldR][oldC] === newValue && 
+                            !usedOldPositions.has(key) &&
+                            (oldR !== newR || oldC !== newC)) {
+                            
+                            // Check if old position is now empty or different
+                            if (this.grid[oldR][oldC] !== newValue) {
+                                const deltaX = newC - oldC;
+                                const deltaY = newR - oldR;
+                                movements.push({
+                                    toR: newR,
+                                    toC: newC,
+                                    deltaX: deltaX,
+                                    deltaY: deltaY,
+                                    isNew: false
+                                });
+                                usedOldPositions.add(key);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return movements;
     },
     
     checkGameState() {
@@ -299,4 +464,3 @@ const Game2048 = {
 
 // Initialize when page loads
 window.addEventListener('load', () => Game2048.init());
-
