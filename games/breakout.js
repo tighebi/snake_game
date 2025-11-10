@@ -204,11 +204,28 @@ const BreakoutGame = {
         });
         
         // Also handle touchstart for immediate response
+        // Start game on any tap/click anywhere in game area
+        const startGameOnTap = (e) => {
+            if (!this.gameStarted) {
+                e.preventDefault();
+                this.startGame();
+                return;
+            }
+        };
+        
+        // Listen for taps/clicks on canvas
         this.canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
             const rect = this.canvas.getBoundingClientRect();
             const touch = e.touches[0];
             
+            // Start game on first touch if not started
+            if (!this.gameStarted) {
+                e.preventDefault();
+                this.startGame();
+                return;
+            }
+            
+            e.preventDefault();
             const scaleX = this.canvas.width / rect.width;
             const touchX = (touch.clientX - rect.left) * scaleX;
             
@@ -218,11 +235,43 @@ const BreakoutGame = {
             }
         });
         
-        this.canvas.addEventListener('click', () => {
-            if (!this.gameStarted) {
-                this.startGame();
-            }
-        });
+        this.canvas.addEventListener('click', startGameOnTap);
+        
+        // Listen for taps/clicks on game container (entire game area)
+        const gameContainer = document.querySelector('.game-container');
+        if (gameContainer) {
+            gameContainer.addEventListener('touchstart', (e) => {
+                if (!this.gameStarted) {
+                    e.preventDefault();
+                    this.startGame();
+                }
+            });
+            gameContainer.addEventListener('click', startGameOnTap);
+        }
+        
+        // Also listen on start prompt specifically
+        const startPrompt = document.getElementById('start-prompt');
+        if (startPrompt) {
+            startPrompt.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!this.gameStarted) {
+                    this.startGame();
+                }
+            });
+            startPrompt.addEventListener('click', startGameOnTap);
+        }
+        
+        // Listen on game controls area too
+        const gameControls = document.querySelector('.game-controls');
+        if (gameControls) {
+            gameControls.addEventListener('touchstart', (e) => {
+                if (!this.gameStarted) {
+                    e.preventDefault();
+                    this.startGame();
+                }
+            });
+            gameControls.addEventListener('click', startGameOnTap);
+        }
         
         // Update paddle position based on keys
         setInterval(() => {

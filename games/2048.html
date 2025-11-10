@@ -9,10 +9,13 @@
     <style>
         body.game-page {
             display: block;
+            overflow-x: hidden;
+            touch-action: pan-y; /* Allow vertical scrolling but prevent horizontal */
         }
         #game2048 {
             max-width: 500px;
             margin: 0 auto;
+            touch-action: none; /* Prevent all touch gestures on game area */
         }
         .grid-container {
             display: grid;
@@ -23,6 +26,7 @@
             border-radius: 10px;
             margin: 20px auto;
             position: relative;
+            touch-action: none; /* Prevent scrolling on grid */
         }
         .tile {
             width: 100px;

@@ -101,13 +101,19 @@ const Game2048 = {
             }
         });
         
-        // Touch controls (swipe)
+        // Touch controls (swipe) - prevent page scrolling
         this.gridElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-        }, { passive: true });
+        }, { passive: false });
+        
+        this.gridElement.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling while swiping
+        }, { passive: false });
         
         this.gridElement.addEventListener('touchend', (e) => {
+            e.preventDefault();
             if (this.gameOver && !this.won) return;
             if (this.animating) return;
             
@@ -126,7 +132,7 @@ const Game2048 = {
                     this.performMove(deltaY > 0 ? 'down' : 'up');
                 }
             }
-        }, { passive: true });
+        }, { passive: false });
     },
     
     setupMenu() {

@@ -278,58 +278,83 @@ const FlappyGame = {
             this.ctx.stroke();
         }
         
-        // Draw bird with better visuals
-        const birdX = this.bird.x + this.bird.width / 2;
-        const birdY = this.bird.y + this.bird.height / 2;
-        const rotation = Math.min(Math.max(this.bird.velocity * 0.15, -0.5), 0.5);
+        // Draw retro pixel-style bird
+        const birdX = this.bird.x;
+        const birdY = this.bird.y;
+        const rotation = Math.min(Math.max(this.bird.velocity * 0.12, -0.4), 0.4);
         
         this.ctx.save();
-        this.ctx.translate(birdX, birdY);
+        this.ctx.translate(birdX + this.bird.width / 2, birdY + this.bird.height / 2);
         this.ctx.rotate(rotation);
+        this.ctx.imageSmoothingEnabled = false; // Pixelated look
         
-        // Bird body gradient
-        const birdGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.bird.width / 2);
-        birdGradient.addColorStop(0, '#FFD700');
-        birdGradient.addColorStop(0.7, '#FFA500');
-        birdGradient.addColorStop(1, '#FF8C00');
+        // Wing animation - flaps faster when moving up
+        const wingSpeed = this.bird.velocity < 0 ? 0.5 : 0.2;
+        const wingOffset = Math.sin(this.frameCount * wingSpeed) * 4;
         
-        // Bird body
-        this.ctx.fillStyle = birdGradient;
+        // Bird body (yellow circle, retro style)
+        this.ctx.fillStyle = '#FFD700';
         this.ctx.beginPath();
-        this.ctx.ellipse(0, 0, this.bird.width / 2, this.bird.height / 2, 0, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, 12, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // Bird outline
-        this.ctx.strokeStyle = '#FF8C00';
+        // Body outline
+        this.ctx.strokeStyle = '#D4AF37';
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
         
-        // Bird wing
+        // Wing (animated, moves with velocity)
         this.ctx.fillStyle = '#FFA500';
         this.ctx.beginPath();
-        this.ctx.ellipse(-5, 0, 8, 12, -0.3, 0, Math.PI * 2);
+        this.ctx.ellipse(-8, 0 + wingOffset, 6, 10, -0.2, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Wing highlight
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.beginPath();
+        this.ctx.ellipse(-6, -2 + wingOffset, 3, 5, -0.2, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Eye (white background)
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.arc(4, -6, 5, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Eye (black pupil)
+        this.ctx.fillStyle = '#000000';
+        this.ctx.beginPath();
+        this.ctx.arc(5, -6, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Eye shine
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.arc(6, -7, 1.5, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Beak (orange triangle)
+        this.ctx.fillStyle = '#FF8C00';
+        this.ctx.beginPath();
+        this.ctx.moveTo(12, 0);
+        this.ctx.lineTo(18, -3);
+        this.ctx.lineTo(18, 3);
+        this.ctx.closePath();
+        this.ctx.fill();
+        
+        // Beak outline
+        this.ctx.strokeStyle = '#D2691E';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.stroke();
+        
+        // Chest highlight
+        this.ctx.fillStyle = '#FFFACD';
+        this.ctx.beginPath();
+        this.ctx.arc(-2, 2, 4, 0, Math.PI * 2);
         this.ctx.fill();
         
         this.ctx.restore();
-        
-        // Bird eye (after rotation)
-        this.ctx.fillStyle = '#000';
-        this.ctx.beginPath();
-        this.ctx.arc(birdX + 5, birdY - 8, 3, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.fillStyle = '#FFF';
-        this.ctx.beginPath();
-        this.ctx.arc(birdX + 6, birdY - 9, 1, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Bird beak
-        this.ctx.fillStyle = '#FF8C00';
-        this.ctx.beginPath();
-        this.ctx.moveTo(birdX + this.bird.width / 2 - 3, birdY);
-        this.ctx.lineTo(birdX + this.bird.width / 2 + 5, birdY - 2);
-        this.ctx.lineTo(birdX + this.bird.width / 2 + 5, birdY + 2);
-        this.ctx.closePath();
-        this.ctx.fill();
+        this.ctx.imageSmoothingEnabled = true; // Re-enable for other elements
     },
     
     gameLoop() {
