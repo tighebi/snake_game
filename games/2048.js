@@ -9,6 +9,8 @@ const Game2048 = {
     SIZE: 4,
     animating: false,
     oldGridState: null,
+    lastMoveDirection: null,
+    tileMovements: [], // Track tile movements for animation
     
     init() {
         this.gridElement = document.getElementById('grid');
@@ -149,14 +151,18 @@ const Game2048 = {
     performMove(direction) {
         if (this.animating) return false;
         
-        // Save old state
+        // Save old state and direction
         this.oldGridState = this.grid.map(row => [...row]);
+        this.lastMoveDirection = direction;
+        this.tileMovements = [];
         
-        // Perform move
+        // Perform move (this will populate tileMovements)
         const moved = this.move(direction);
         
         if (!moved) {
             this.oldGridState = null;
+            this.lastMoveDirection = null;
+            this.tileMovements = [];
             return false;
         }
         
@@ -169,6 +175,8 @@ const Game2048 = {
             this.checkGameState();
             this.animating = false;
             this.oldGridState = null;
+            this.lastMoveDirection = null;
+            this.tileMovements = [];
         });
         
         return true;
@@ -177,44 +185,145 @@ const Game2048 = {
     move(direction) {
         const oldGrid = this.grid.map(row => [...row]);
         let moved = false;
+        this.tileMovements = [];
+        
+        // Enhanced merge function that tracks movements
+        const mergeWithTracking = (line, isReverse = false) => {
+            const merged = [];
+            const movements = [];
+            let mergeIndex = 0;
+            
+            // Filter out zeros and track original indices
+            const nonZeros = [];
+            for (let i = 0; i < line.length; i++) {
+                if (line[i] !== 0) {
+                    nonZeros.push({ value: line[i], originalIndex: i });
+                }
+            }
+            
+            // Process merges
+            for (let i = 0; i < nonZeros.length; i++) {
+                if (i < nonZeros.length - 1 && nonZeros[i].value === nonZeros[i + 1].value) {
+                    // Merge - use the further source tile for animation (looks more natural)
+                    const mergedValue = nonZeros[i].value * 2;
+                    merged.push(mergedValue);
+                    this.score += mergedValue; // Update score
+                    
+                    // For merges, animate from the further source position for better visual
+                    // Use the tile that's further from the destination
+                    const fromIndex = isReverse 
+                        ? nonZeros[i].originalIndex  // In reverse, first in array is further from destination
+                        : nonZeros[i + 1].originalIndex; // In normal, second is further from destination
+                    
+                    movements.push({
+                        fromIndex: fromIndex,
+                        toIndex: mergeIndex,
+                        merged: true
+                    });
+                    
+                    i++; // Skip next (merged) tile
+                } else {
+                    // No merge - simple movement
+                    merged.push(nonZeros[i].value);
+                    movements.push({
+                        fromIndex: nonZeros[i].originalIndex,
+                        toIndex: mergeIndex,
+                        merged: false
+                    });
+                }
+                mergeIndex++;
+            }
+            
+            // Pad with zeros
+            while (merged.length < line.length) {
+                merged.push(0);
+            }
+            
+            return { merged, movements };
+        };
         
         if (direction === 'left') {
             for (let r = 0; r < this.SIZE; r++) {
-                const row = this.grid[r].filter(val => val !== 0);
-                const merged = this.merge(row);
-                while (merged.length < this.SIZE) merged.push(0);
-                this.grid[r] = merged;
+                const result = mergeWithTracking(oldGrid[r], false);
+                this.grid[r] = result.merged;
+                result.movements.forEach(mov => {
+                    if (mov.fromIndex !== mov.toIndex) {
+                        this.tileMovements.push({
+                            fromR: r,
+                            fromC: mov.fromIndex,
+                            toR: r,
+                            toC: mov.toIndex,
+                            merged: mov.merged
+                        });
+                    }
+                });
             }
         } else if (direction === 'right') {
             for (let r = 0; r < this.SIZE; r++) {
-                const row = this.grid[r].filter(val => val !== 0);
-                const merged = this.merge(row.reverse()).reverse();
-                while (merged.length < this.SIZE) merged.unshift(0);
-                this.grid[r] = merged;
+                const reversed = [...oldGrid[r]].reverse();
+                const result = mergeWithTracking(reversed, true);
+                this.grid[r] = result.merged.reverse();
+                result.movements.forEach(mov => {
+                    const fromC = this.SIZE - 1 - mov.fromIndex;
+                    const toC = this.SIZE - 1 - mov.toIndex;
+                    if (fromC !== toC) {
+                        this.tileMovements.push({
+                            fromR: r,
+                            fromC: fromC,
+                            toR: r,
+                            toC: toC,
+                            merged: mov.merged
+                        });
+                    }
+                });
             }
         } else if (direction === 'up') {
             for (let c = 0; c < this.SIZE; c++) {
                 const column = [];
                 for (let r = 0; r < this.SIZE; r++) {
-                    if (this.grid[r][c] !== 0) column.push(this.grid[r][c]);
+                    column.push(oldGrid[r][c]);
                 }
-                const merged = this.merge(column);
-                while (merged.length < this.SIZE) merged.push(0);
+                const result = mergeWithTracking(column, false);
                 for (let r = 0; r < this.SIZE; r++) {
-                    this.grid[r][c] = merged[r];
+                    this.grid[r][c] = result.merged[r];
                 }
+                result.movements.forEach(mov => {
+                    if (mov.fromIndex !== mov.toIndex) {
+                        this.tileMovements.push({
+                            fromR: mov.fromIndex,
+                            fromC: c,
+                            toR: mov.toIndex,
+                            toC: c,
+                            merged: mov.merged
+                        });
+                    }
+                });
             }
         } else if (direction === 'down') {
             for (let c = 0; c < this.SIZE; c++) {
                 const column = [];
                 for (let r = 0; r < this.SIZE; r++) {
-                    if (this.grid[r][c] !== 0) column.push(this.grid[r][c]);
+                    column.push(oldGrid[r][c]);
                 }
-                const merged = this.merge(column.reverse()).reverse();
-                while (merged.length < this.SIZE) merged.unshift(0);
+                const reversed = [...column].reverse();
+                const result = mergeWithTracking(reversed, true);
+                const finalColumn = result.merged.reverse();
                 for (let r = 0; r < this.SIZE; r++) {
-                    this.grid[r][c] = merged[r];
+                    this.grid[r][c] = finalColumn[r];
                 }
+                result.movements.forEach(mov => {
+                    const fromR = this.SIZE - 1 - mov.fromIndex;
+                    const toR = this.SIZE - 1 - mov.toIndex;
+                    if (fromR !== toR) {
+                        this.tileMovements.push({
+                            fromR: fromR,
+                            fromC: c,
+                            toR: toR,
+                            toC: c,
+                            merged: mov.merged
+                        });
+                    }
+                });
             }
         }
         
@@ -231,6 +340,7 @@ const Game2048 = {
         
         if (!moved) {
             this.grid = oldGrid;
+            this.tileMovements = [];
         }
         
         return moved;
@@ -252,54 +362,117 @@ const Game2048 = {
     },
     
     animateMove(callback) {
-        if (!this.oldGridState) {
+        if (!this.oldGridState || this.tileMovements.length === 0) {
             this.updateDisplay();
             if (callback) callback();
             return;
         }
         
-        // Create movement tracking
-        const movements = this.calculateTileMovements();
-        
-        // Update display first
+        // Update display first - create tiles at final positions
         this.updateDisplay();
         
         // Animate after DOM update
         requestAnimationFrame(() => {
             const tiles = this.gridElement.querySelectorAll('.tile');
-            const tileSize = 110;
-            let hasAnimations = false;
+            const tileSize = 110; // Size including padding
+            const gap = 10; // Gap between tiles
+            const cellSize = tileSize + gap;
+            const speed = 1200; // pixels per second - constant speed for all tiles (faster animation)
             
-            movements.forEach(move => {
-                const tileIndex = move.toR * this.SIZE + move.toC;
-                const tile = tiles[tileIndex];
+            // Create a map of final positions to tiles
+            const tileMap = new Map();
+            tiles.forEach((tile, index) => {
+                const r = Math.floor(index / this.SIZE);
+                const c = index % this.SIZE;
+                tileMap.set(`${r}-${c}`, tile);
+            });
+            
+            let hasAnimations = false;
+            let maxDuration = 0;
+            const animations = [];
+            
+            // First pass: calculate all movements and find max duration
+            this.tileMovements.forEach(move => {
+                const tileKey = `${move.toR}-${move.toC}`;
+                const tile = tileMap.get(tileKey);
                 
-                if (tile && (move.deltaX !== 0 || move.deltaY !== 0)) {
+                if (!tile) return;
+                
+                // Calculate delta based on direction - ensure straight line (horizontal OR vertical only)
+                let deltaX = 0;
+                let deltaY = 0;
+                let distance = 0;
+                
+                if (this.lastMoveDirection === 'left' || this.lastMoveDirection === 'right') {
+                    // Horizontal movement only - no vertical component
+                    deltaX = (move.fromC - move.toC) * cellSize;
+                    deltaY = 0;
+                    distance = Math.abs(deltaX);
+                } else if (this.lastMoveDirection === 'up' || this.lastMoveDirection === 'down') {
+                    // Vertical movement only - no horizontal component
+                    deltaX = 0;
+                    deltaY = (move.fromR - move.toR) * cellSize;
+                    distance = Math.abs(deltaY);
+                }
+                
+                if (distance > 0) {
                     hasAnimations = true;
-                    const deltaX = move.deltaX * tileSize;
-                    const deltaY = move.deltaY * tileSize;
+                    // Calculate duration based on distance for constant speed
+                    const duration = distance / speed;
+                    maxDuration = Math.max(maxDuration, duration);
                     
-                    // Set initial transform
-                    tile.style.transform = `translate(${-deltaX}px, ${-deltaY}px)`;
-                    tile.style.transition = 'none';
-                    tile.classList.add('sliding');
-                    
-                    // Force reflow
-                    tile.offsetHeight;
-                    
-                    // Animate to final position
-                    requestAnimationFrame(() => {
-                        tile.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
-                        tile.style.transform = 'translate(0, 0)';
+                    animations.push({
+                        tile,
+                        deltaX,
+                        deltaY,
+                        duration,
+                        merged: move.merged
                     });
-                } else if (tile && move.isNew) {
-                    // New tile animation
-                    tile.classList.add('tile-new');
                 }
             });
             
-            // Cleanup after animation
-            const delay = hasAnimations ? 200 : 50;
+            // Second pass: apply animations - each tile uses its calculated duration for constant speed
+            animations.forEach(anim => {
+                // Set initial position (tile starts offset by the movement distance)
+                anim.tile.style.transform = `translate(${anim.deltaX}px, ${anim.deltaY}px)`;
+                anim.tile.style.transition = 'none';
+                anim.tile.classList.add('sliding');
+                
+                // Force reflow
+                anim.tile.offsetHeight;
+                
+                // Animate to final position - use calculated duration for constant speed
+                // Linear timing ensures constant speed (no acceleration/deceleration)
+                // Duration is distance-based, so all tiles move at the same pixels/second
+                requestAnimationFrame(() => {
+                    anim.tile.style.transition = `transform ${anim.duration}s linear`;
+                    anim.tile.style.transform = 'translate(0, 0)';
+                });
+            });
+            
+            // Mark new tiles (that appeared without moving)
+            const newTilePositions = new Set();
+            this.tileMovements.forEach(move => {
+                newTilePositions.add(`${move.toR}-${move.toC}`);
+            });
+            
+            // Find tiles that are new (not in movements and not in old grid)
+            for (let r = 0; r < this.SIZE; r++) {
+                for (let c = 0; c < this.SIZE; c++) {
+                    if (this.grid[r][c] !== 0 && this.oldGridState[r][c] === 0) {
+                        const tileKey = `${r}-${c}`;
+                        if (!newTilePositions.has(tileKey)) {
+                            const tile = tileMap.get(tileKey);
+                            if (tile) {
+                                tile.classList.add('tile-new');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Cleanup after animation - use max duration
+            const delay = hasAnimations ? (maxDuration * 1000) + 50 : 100;
             setTimeout(() => {
                 tiles.forEach(tile => {
                     tile.style.transform = '';
@@ -311,83 +484,6 @@ const Game2048 = {
         });
     },
     
-    calculateTileMovements() {
-        if (!this.oldGridState) return [];
-        
-        const movements = [];
-        const usedOldPositions = new Set();
-        
-        // Track movements: for each new position, find where it came from
-        for (let newR = 0; newR < this.SIZE; newR++) {
-            for (let newC = 0; newC < this.SIZE; newC++) {
-                const newValue = this.grid[newR][newC];
-                const oldValue = this.oldGridState[newR][newC];
-                
-                if (newValue === 0) continue;
-                
-                // Check if this is a new tile (was empty before)
-                if (oldValue === 0) {
-                    movements.push({
-                        toR: newR,
-                        toC: newC,
-                        deltaX: 0,
-                        deltaY: 0,
-                        isNew: true
-                    });
-                    continue;
-                }
-                
-                // Check if value changed (merge happened)
-                if (newValue !== oldValue && newValue === oldValue * 2) {
-                    // This is a merged tile - find the two source tiles
-                    movements.push({
-                        toR: newR,
-                        toC: newC,
-                        deltaX: 0,
-                        deltaY: 0,
-                        isMerged: true,
-                        isNew: true
-                    });
-                    continue;
-                }
-                
-                // Check if tile moved from a different position
-                if (newValue === oldValue) {
-                    // Tile didn't move or change
-                    continue;
-                }
-                
-                // Find source position for moved tiles
-                // Look for this value in old grid that's not at current position
-                for (let oldR = 0; oldR < this.SIZE; oldR++) {
-                    for (let oldC = 0; oldC < this.SIZE; oldC++) {
-                        const key = `${oldR}-${oldC}`;
-                        if (this.oldGridState[oldR][oldC] === newValue && 
-                            !usedOldPositions.has(key) &&
-                            (oldR !== newR || oldC !== newC)) {
-                            
-                            // Check if old position is now empty or different
-                            if (this.grid[oldR][oldC] !== newValue) {
-                                const deltaX = newC - oldC;
-                                const deltaY = newR - oldR;
-                                movements.push({
-                                    toR: newR,
-                                    toC: newC,
-                                    deltaX: deltaX,
-                                    deltaY: deltaY,
-                                    isNew: false
-                                });
-                                usedOldPositions.add(key);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        return movements;
-    },
     
     checkGameState() {
         // Check for win (2048 tile)

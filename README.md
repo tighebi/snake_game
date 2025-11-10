@@ -14,7 +14,7 @@ Classic brick-breaking action with multiple difficulty levels and progressive sp
 Tap to fly! Navigate through obstacles and see how far you can go. Speed increases as you progress!
 
 ### 🔢 2048
-Slide tiles to combine numbers. Can you reach 2048? Features smooth animations and intuitive controls.
+Slide tiles to combine numbers. Can you reach 2048? Features fast, smooth straight-line animations and intuitive controls.
 
 ## 🎮 Game Hub
 
@@ -74,11 +74,17 @@ Change the appearance of your snake:
 
 #### Themes
 Change the game's visual style and background:
-- **Default** - Purple/blue gradient theme
+- **Default** - Purple/blue gradient theme with cyan/teal snake
 - **Night Mode** - Dark purple theme for low-light gaming
 - **Garden** - Green nature theme
 - **Space** - Deep blue space theme
 - **Retro LCD** - Classic green terminal theme
+
+#### Food Visibility
+- **Theme-matched food colors** - Apple color changes with each theme for maximum visibility
+- **High contrast** - Food is always clearly visible against any snake color
+- **Enhanced rendering** - Glow effects and white borders for easy spotting
+- Works perfectly with all skins including Rainbow mode
 
 ## 🧱 Breakout Game Details
 
@@ -127,7 +133,8 @@ Change the game's visual style and background:
 ## 🔢 2048 Game Details
 
 ### Features
-- Smooth slide animations for all tile movements
+- Fast, smooth slide animations with straight-line movement
+- Constant-speed animations (no slowdown for merges)
 - Arrow keys or WASD controls
 - Swipe gestures on mobile
 - Win condition at 2048 (can continue playing)
@@ -142,7 +149,9 @@ Change the game's visual style and background:
 - Reach 2048 to win (optional continuation)
 
 ### Animations
-- Smooth tile sliding animations
+- Fast, smooth tile sliding animations (1200 px/s constant speed)
+- Straight-line movement (horizontal or vertical only)
+- Consistent animation speed regardless of distance or merges
 - New tile pop animations
 - Visual feedback for all moves
 
@@ -168,7 +177,9 @@ Change the game's visual style and background:
 
 ### Consistent Theming
 - Unified visual style across all games
-- Animated background effects
+- **Theme-aware UI elements** - Dropdowns and controls match selected theme
+- **Theme-matched colors** - All UI elements adapt to theme colors
+- Animated background effects (optimized performance)
 - Smooth transitions
 - Retro arcade aesthetic
 
@@ -266,10 +277,13 @@ snake_game/
 
 ### Performance
 - Smooth 60 FPS rendering
-- Optimized game loops
+- Optimized game loops with requestAnimationFrame
 - Efficient collision detection
 - Lightweight codebase
-- Cached rendering (grids, etc.)
+- Cached rendering (grids, backgrounds)
+- **Batched rendering** - Snake segments drawn in batches for optimal performance with long snakes
+- **Background animation throttling** - Reduced to 30 FPS when page is visible, paused when hidden
+- **Optimized for long games** - Snake game remains smooth even with 100+ segments
 
 ## 💾 Data Storage
 
@@ -308,7 +322,28 @@ snake_game/
 
 ## 📝 Changelog
 
-### Version 3.0 (Current) - Arcade Edition
+### Version 3.1 (Current) - Performance & Polish Update
+- **Performance Optimizations**:
+  - Batched rendering for Snake game - handles long snakes (100+ segments) smoothly
+  - Background animation throttled to 30 FPS and paused when page hidden
+  - Optimized robot skin rendering (2 batches instead of N draws)
+  - Classic skin uses single-batch rendering for maximum performance
+- **2048 Animation Improvements**:
+  - Faster sliding animations (1200 px/s constant speed)
+  - Straight-line movement enforcement (horizontal or vertical only)
+  - Consistent animation speed regardless of distance or merges
+  - Linear timing for constant velocity
+- **UI Enhancements**:
+  - Theme-aware dropdowns - all select elements match theme colors
+  - Clean dropdown design with theme-colored borders
+  - Themed dropdown options for visual consistency
+- **Snake Game Enhancements**:
+  - Theme-matched food colors for maximum visibility
+  - Enhanced food rendering with glow effects and white borders
+  - Food colors optimized for each theme (high contrast)
+  - Fixed retro theme food color (was same as snake head)
+
+### Version 3.0 - Arcade Edition
 - **Added Breakout game** with difficulty levels
 - **Added Flappy Bird game** with progressive speed
 - **Added 2048 game** with smooth animations
@@ -343,7 +378,6 @@ snake_game/
 
 **Tighe Billings**
 - Email: tigheb@bu.edu
-- Sponsored by Boston University
 
 ## 📄 License
 
@@ -351,7 +385,6 @@ snake_game/
 
 ## 🙏 Acknowledgments
 
-- Boston University for sponsorship
 - Classic arcade game inspiration
 - Modern web technologies
 - Retro gaming community

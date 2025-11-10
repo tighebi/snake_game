@@ -65,7 +65,7 @@ const Renderer = {
         }
     },
     
-    // Render the game
+    // Render the game - optimized for long snakes
     render(gameState) {
         if (!this.ctx) return;
         
@@ -82,25 +82,75 @@ const Renderer = {
         // Draw food
         this.drawFood(gameState.food, gameState.foodType, theme);
         
-        // Draw snake body first
+        // Optimized snake rendering - batch draws by color for performance
         const bodySegments = gameState.snake.slice(1);
-        for (let i = 0; i < bodySegments.length; i++) {
-            const segment = bodySegments[i];
-            this.ctx.fillStyle = skin.getBodyColor(gameState.frameCount, i + 1);
-            this.ctx.fillRect(
-                segment.x * CONFIG.GRID_SIZE + 2,
-                segment.y * CONFIG.GRID_SIZE + 2,
-                CONFIG.GRID_SIZE - 4,
-                CONFIG.GRID_SIZE - 4
-            );
+        const isRainbow = gameState.currentSkin === 'rainbow';
+        const isRobot = gameState.currentSkin === 'robot';
+        const segmentSize = CONFIG.GRID_SIZE - 4;
+        const padding = 2;
+        
+        if (isRainbow) {
+            // Rainbow skin - must draw individually (each segment different color)
+            for (let i = 0; i < bodySegments.length; i++) {
+                const segment = bodySegments[i];
+                this.ctx.fillStyle = skin.getBodyColor(gameState.frameCount, i + 1);
+                this.ctx.fillRect(
+                    segment.x * CONFIG.GRID_SIZE + padding,
+                    segment.y * CONFIG.GRID_SIZE + padding,
+                    segmentSize,
+                    segmentSize
+                );
+            }
+        } else if (isRobot && bodySegments.length > 0) {
+            // Robot skin - batch by alternating colors (only 2 colors)
+            const color1 = skin.getBodyColor(gameState.frameCount, 1);
+            const color2 = skin.getBodyColor(gameState.frameCount, 2);
+            
+            // Batch draw even-indexed segments
+            this.ctx.fillStyle = color1;
+            this.ctx.beginPath();
+            for (let i = 0; i < bodySegments.length; i += 2) {
+                const segment = bodySegments[i];
+                const x = segment.x * CONFIG.GRID_SIZE + padding;
+                const y = segment.y * CONFIG.GRID_SIZE + padding;
+                this.ctx.rect(x, y, segmentSize, segmentSize);
+            }
+            this.ctx.fill();
+            
+            // Batch draw odd-indexed segments
+            if (bodySegments.length > 1) {
+                this.ctx.fillStyle = color2;
+                this.ctx.beginPath();
+                for (let i = 1; i < bodySegments.length; i += 2) {
+                    const segment = bodySegments[i];
+                    const x = segment.x * CONFIG.GRID_SIZE + padding;
+                    const y = segment.y * CONFIG.GRID_SIZE + padding;
+                    this.ctx.rect(x, y, segmentSize, segmentSize);
+                }
+                this.ctx.fill();
+            }
+        } else if (bodySegments.length > 0) {
+            // Classic skin - single color, batch all segments in one draw
+            const bodyColor = skin.getBodyColor(gameState.frameCount, 1);
+            this.ctx.fillStyle = bodyColor;
+            this.ctx.beginPath();
+            
+            // Batch draw all body segments with a single path
+            for (let i = 0; i < bodySegments.length; i++) {
+                const segment = bodySegments[i];
+                const x = segment.x * CONFIG.GRID_SIZE + padding;
+                const y = segment.y * CONFIG.GRID_SIZE + padding;
+                this.ctx.rect(x, y, segmentSize, segmentSize);
+            }
+            this.ctx.fill();
         }
         
         // Draw snake head last (on top)
         if (gameState.snake.length > 0) {
             const head = gameState.snake[0];
-            const headX = head.x * CONFIG.GRID_SIZE + 2;
-            const headY = head.y * CONFIG.GRID_SIZE + 2;
-            const headSize = CONFIG.GRID_SIZE - 4;
+            const headX = head.x * CONFIG.GRID_SIZE + padding;
+            const headY = head.y * CONFIG.GRID_SIZE + padding;
+            const headSize = segmentSize;
             
             // Head fill
             this.ctx.fillStyle = skin.getHeadColor(gameState.frameCount);

@@ -27,8 +27,32 @@ function initBackgroundAnimation() {
         mouseY = window.innerHeight / 2;
     });
     
-    // Animation loop with parallax nudge effect
-    function animate() {
+    // Animation loop with parallax nudge effect - optimized
+    let lastFrameTime = 0;
+    const targetFPS = 30; // Reduce from 60 to 30 for background (less critical)
+    const frameInterval = 1000 / targetFPS;
+    let isPageVisible = true;
+    
+    // Throttle animation when page is hidden
+    document.addEventListener('visibilitychange', () => {
+        isPageVisible = !document.hidden;
+    });
+    
+    function animate(currentTime) {
+        // Skip frame if not enough time has passed (throttle to target FPS)
+        if (currentTime - lastFrameTime < frameInterval && isPageVisible) {
+            requestAnimationFrame(animate);
+            return;
+        }
+        
+        lastFrameTime = currentTime;
+        
+        // Only animate if page is visible or mouse is moving
+        if (!isPageVisible) {
+            requestAnimationFrame(animate);
+            return;
+        }
+        
         // Smooth mouse follower
         smoothX += (mouseX - smoothX) * 0.15;
         smoothY += (mouseY - smoothY) * 0.15;
@@ -89,7 +113,8 @@ function initBackgroundAnimation() {
     mouseFollower.style.left = smoothX + 'px';
     mouseFollower.style.top = smoothY + 'px';
     
-    animate();
+    // Start animation loop
+    requestAnimationFrame(animate);
 }
 
 // Initialize background animation when page loads

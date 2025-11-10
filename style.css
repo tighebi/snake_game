@@ -523,26 +523,44 @@ select:focus {
     box-shadow: 0 0 8px rgba(78, 205, 196, 0.4);
 }
 
+/* Default theme options - all options themed */
 .customization-group select option,
 #difficulty-selector option,
 select option {
-    background: rgba(26, 26, 46, 0.98);
-    color: #fff;
-    padding: 10px;
+    background: rgba(26, 26, 46, 0.98) !important;
+    color: #fff !important;
+    padding: 10px 12px !important;
+    font-size: 0.9em !important;
+}
+
+/* Ensure all options maintain theme, not just selected */
+.customization-group select option:not(:checked),
+#difficulty-selector option:not(:checked),
+select option:not(:checked) {
+    background: rgba(26, 26, 46, 0.98) !important;
+    color: #fff !important;
 }
 
 .customization-group select option:hover,
 #difficulty-selector option:hover,
 select option:hover {
-    background: rgba(78, 205, 196, 0.3);
+    background: rgba(78, 205, 196, 0.4) !important;
+    color: #fff !important;
 }
 
 .customization-group select option:checked,
 #difficulty-selector option:checked,
 select option:checked {
-    background: #4ecdc4;
-    color: #1a1a2e;
-    font-weight: bold;
+    background: #4ecdc4 !important;
+    color: #1a1a2e !important;
+    font-weight: bold !important;
+}
+
+.customization-group select option:focus,
+#difficulty-selector option:focus,
+select option:focus {
+    background: rgba(78, 205, 196, 0.5) !important;
+    color: #fff !important;
 }
 
 /* Night theme (purple) */
@@ -567,25 +585,43 @@ body.theme-night select:focus {
     box-shadow: 0 0 10px rgba(108, 92, 231, 0.5);
 }
 
+/* Night theme options - all options themed */
 body.theme-night .customization-group select option,
 body.theme-night #difficulty-selector option,
 body.theme-night select option {
-    background: rgba(10, 10, 26, 0.98);
-    color: #fff;
+    background: rgba(10, 10, 26, 0.98) !important;
+    color: #fff !important;
+    padding: 10px 12px !important;
+    font-size: 0.9em !important;
+}
+
+body.theme-night .customization-group select option:not(:checked),
+body.theme-night #difficulty-selector option:not(:checked),
+body.theme-night select option:not(:checked) {
+    background: rgba(10, 10, 26, 0.98) !important;
+    color: #fff !important;
 }
 
 body.theme-night .customization-group select option:hover,
 body.theme-night #difficulty-selector option:hover,
 body.theme-night select option:hover {
-    background: rgba(108, 92, 231, 0.3);
+    background: rgba(108, 92, 231, 0.4) !important;
+    color: #fff !important;
 }
 
 body.theme-night .customization-group select option:checked,
 body.theme-night #difficulty-selector option:checked,
 body.theme-night select option:checked {
-    background: #6c5ce7;
-    color: #fff;
-    font-weight: bold;
+    background: #6c5ce7 !important;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+
+body.theme-night .customization-group select option:focus,
+body.theme-night #difficulty-selector option:focus,
+body.theme-night select option:focus {
+    background: rgba(108, 92, 231, 0.5) !important;
+    color: #fff !important;
 }
 
 /* Garden theme (green) */
@@ -610,25 +646,43 @@ body.theme-garden select:focus {
     box-shadow: 0 0 10px rgba(81, 207, 102, 0.5);
 }
 
+/* Garden theme options - all options themed */
 body.theme-garden .customization-group select option,
 body.theme-garden #difficulty-selector option,
 body.theme-garden select option {
-    background: rgba(45, 80, 22, 0.98);
-    color: #fff;
+    background: rgba(45, 80, 22, 0.98) !important;
+    color: #fff !important;
+    padding: 10px 12px !important;
+    font-size: 0.9em !important;
+}
+
+body.theme-garden .customization-group select option:not(:checked),
+body.theme-garden #difficulty-selector option:not(:checked),
+body.theme-garden select option:not(:checked) {
+    background: rgba(45, 80, 22, 0.98) !important;
+    color: #fff !important;
 }
 
 body.theme-garden .customization-group select option:hover,
 body.theme-garden #difficulty-selector option:hover,
 body.theme-garden select option:hover {
-    background: rgba(81, 207, 102, 0.3);
+    background: rgba(81, 207, 102, 0.4) !important;
+    color: #fff !important;
 }
 
 body.theme-garden .customization-group select option:checked,
 body.theme-garden #difficulty-selector option:checked,
 body.theme-garden select option:checked {
-    background: #51cf66;
-    color: #2d5016;
-    font-weight: bold;
+    background: #51cf66 !important;
+    color: #2d5016 !important;
+    font-weight: bold !important;
+}
+
+body.theme-garden .customization-group select option:focus,
+body.theme-garden #difficulty-selector option:focus,
+body.theme-garden select option:focus {
+    background: rgba(81, 207, 102, 0.5) !important;
+    color: #fff !important;
 }
 
 /* Space theme (blue) */
@@ -653,25 +707,43 @@ body.theme-space select:focus {
     box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
 }
 
+/* Space theme options - all options themed */
 body.theme-space .customization-group select option,
 body.theme-space #difficulty-selector option,
 body.theme-space select option {
-    background: rgba(0, 8, 20, 0.98);
-    color: #fff;
+    background: rgba(0, 8, 20, 0.98) !important;
+    color: #fff !important;
+    padding: 10px 12px !important;
+    font-size: 0.9em !important;
+}
+
+body.theme-space .customization-group select option:not(:checked),
+body.theme-space #difficulty-selector option:not(:checked),
+body.theme-space select option:not(:checked) {
+    background: rgba(0, 8, 20, 0.98) !important;
+    color: #fff !important;
 }
 
 body.theme-space .customization-group select option:hover,
 body.theme-space #difficulty-selector option:hover,
 body.theme-space select option:hover {
-    background: rgba(74, 144, 226, 0.3);
+    background: rgba(74, 144, 226, 0.4) !important;
+    color: #fff !important;
 }
 
 body.theme-space .customization-group select option:checked,
 body.theme-space #difficulty-selector option:checked,
 body.theme-space select option:checked {
-    background: #4a90e2;
-    color: #fff;
-    font-weight: bold;
+    background: #4a90e2 !important;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+
+body.theme-space .customization-group select option:focus,
+body.theme-space #difficulty-selector option:focus,
+body.theme-space select option:focus {
+    background: rgba(74, 144, 226, 0.5) !important;
+    color: #fff !important;
 }
 
 /* Retro theme (green terminal) */
@@ -697,27 +769,43 @@ body.theme-retro select:focus {
     box-shadow: 0 0 12px rgba(0, 255, 65, 0.6);
 }
 
+/* Retro theme options - all options themed */
 body.theme-retro .customization-group select option,
 body.theme-retro #difficulty-selector option,
 body.theme-retro select option {
-    background: rgba(30, 58, 30, 0.98);
-    color: #00ff41;
+    background: rgba(30, 58, 30, 0.98) !important;
+    color: #00ff41 !important;
+    padding: 10px 12px !important;
+    font-size: 0.9em !important;
+}
+
+body.theme-retro .customization-group select option:not(:checked),
+body.theme-retro #difficulty-selector option:not(:checked),
+body.theme-retro select option:not(:checked) {
+    background: rgba(30, 58, 30, 0.98) !important;
+    color: #00ff41 !important;
 }
 
 body.theme-retro .customization-group select option:hover,
 body.theme-retro #difficulty-selector option:hover,
 body.theme-retro select option:hover {
-    background: rgba(0, 255, 65, 0.2);
-    color: #00ff88;
+    background: rgba(0, 255, 65, 0.3) !important;
+    color: #00ff88 !important;
 }
 
 body.theme-retro .customization-group select option:checked,
 body.theme-retro #difficulty-selector option:checked,
 body.theme-retro select option:checked {
-    background: #00ff41;
-    color: #1e3a1e;
-    font-weight: bold;
-    box-shadow: 0 0 5px rgba(0, 255, 65, 0.8);
+    background: #00ff41 !important;
+    color: #1e3a1e !important;
+    font-weight: bold !important;
+}
+
+body.theme-retro .customization-group select option:focus,
+body.theme-retro #difficulty-selector option:focus,
+body.theme-retro select option:focus {
+    background: rgba(0, 255, 65, 0.4) !important;
+    color: #00ff88 !important;
 }
 
 /* Disable select when game is running */
