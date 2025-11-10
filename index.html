@@ -14,41 +14,90 @@
         <div class="bg-layer bg-particles"></div>
         <div class="mouse-follower" id="mouseFollower"></div>
     </div>
-    <div class="game-container">
+    <!-- Main Menu -->
+    <div id="main-menu" class="menu-screen">
+        <div class="menu-content">
+            <h1>Snake Game</h1>
+            <div class="menu-section">
+                <h2>Select Game Mode</h2>
+                <div class="mode-selection">
+                    <button class="menu-btn" data-mode="classic">Classic</button>
+                    <button class="menu-btn" data-mode="zen">Zen Mode</button>
+                    <button class="menu-btn" data-mode="powerup">Power-Up</button>
+                </div>
+            </div>
+            <div class="menu-section">
+                <h2>Customization</h2>
+                <div class="customization-section">
+                    <div class="customization-group">
+                        <label>Skin:</label>
+                        <select id="skin-selector" tabindex="0">
+                            <option value="classic">Classic</option>
+                            <option value="rainbow">Rainbow</option>
+                            <option value="robot">Robot</option>
+                        </select>
+                    </div>
+                    <div class="customization-group">
+                        <label>Theme:</label>
+                        <select id="theme-selector" tabindex="0">
+                            <option value="default">Default</option>
+                            <option value="night">Night Mode</option>
+                            <option value="garden">Garden</option>
+                            <option value="space">Space</option>
+                            <option value="retro">Retro LCD</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container (hidden initially) -->
+    <div class="game-container hidden">
         <div class="game-header">
             <h1>Snake Game</h1>
             <div class="score-container">
                 <span>Score: <span id="score">0</span></span>
-                <span>High Score: <span id="high-score">0</span></span>
+                <span id="high-score-container">High Score: <span id="high-score">0</span></span>
             </div>
         </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <div class="game-controls">
+            <!-- Pause Menu -->
+            <div id="pause-menu" class="pause-menu hidden">
+                <h2 id="pause-title">Ready to Play</h2>
+                <p id="pause-instructions" class="pause-instructions">Press an arrow key or click Play to start</p>
+                <button class="menu-btn" id="resume-btn">Play</button>
+                <button class="menu-btn" id="back-to-menu-btn">Back to Menu</button>
+            </div>
+            <!-- Game Over Menu -->
             <div id="game-over" class="game-over hidden">
                 <div class="game-over-tabs">
                     <button class="tab-button active" data-tab="restart">Restart</button>
-                    <button class="tab-button" data-tab="highscores">High Scores</button>
+                    <button class="tab-button" data-tab="highscores" id="highscores-tab-btn">High Scores</button>
                 </div>
                 <div id="restart-tab" class="tab-content active">
                     <h2>Game Over!</h2>
-                    <p class="desktop-text">Press an arrow key to start</p>
-                    <p class="mobile-text">Tap a direction to start</p>
+                    <p>Final Score: <span id="final-score">0</span></p>
+                    <button class="menu-btn" id="play-again-btn">Play Again</button>
+                    <button class="menu-btn" id="menu-from-gameover-btn">Back to Menu</button>
                 </div>
                 <div id="highscores-tab" class="tab-content">
-                    <h2>High Scores</h2>
+                    <h2 id="highscores-title">High Scores</h2>
                     <div id="high-scores-list"></div>
                 </div>
-            </div>
-            <div id="start-prompt" class="start-prompt">
-                <p class="desktop-text">Press an arrow key to start</p>
-                <p class="mobile-text">Tap a direction to start</p>
+                <div id="powerup-highscores-tab" class="tab-content">
+                    <h2>Power-Up High Scores</h2>
+                    <div id="powerup-high-scores-list"></div>
+                </div>
             </div>
             <div class="instructions">
-                <p class="desktop-text">Use arrow keys to control the snake</p>
-                <p class="mobile-text">Use the directional buttons or swipe to control</p>
+                <p class="desktop-text">Press SPACE to pause | Use arrow keys to control</p>
+                <p class="mobile-text">Tap the pause button or use directional controls</p>
             </div>
             <!-- Mobile touch controls -->
             <div class="mobile-controls">
+                <button class="pause-btn" id="mobile-pause-btn">⏸ Pause</button>
                 <div class="control-row">
                     <button class="control-btn" data-direction="up" aria-label="Up">↑</button>
                 </div>
