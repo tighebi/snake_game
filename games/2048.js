@@ -118,18 +118,8 @@ const Game2048 = {
         
         if (backToMenuBtn) {
             backToMenuBtn.addEventListener('click', () => {
-                // Hide game container
-                const gameContainer = document.querySelector('.game-container');
-                if (gameContainer) {
-                    gameContainer.classList.add('hidden');
-                }
-                // Show main menu
-                const mainMenu = document.getElementById('main-menu');
-                if (mainMenu) {
-                    mainMenu.classList.remove('hidden');
-                }
-                // Reset game
-                this.resetGame();
+                // Navigate to home page
+                window.location.href = '../index.html';
             });
         }
         
@@ -477,18 +467,8 @@ const Game2048 = {
         
         if (menuFromGameOverBtn) {
             menuFromGameOverBtn.addEventListener('click', () => {
-                // Hide game container
-                const gameContainer = document.querySelector('.game-container');
-                if (gameContainer) {
-                    gameContainer.classList.add('hidden');
-                }
-                // Show main menu
-                const mainMenu = document.getElementById('main-menu');
-                if (mainMenu) {
-                    mainMenu.classList.remove('hidden');
-                }
-                // Reset game
-                this.resetGame();
+                // Navigate to home page
+                window.location.href = '../index.html';
             });
         }
         
@@ -887,11 +867,33 @@ const Game2048 = {
             // Hide pause menu and show game over
             const pauseMenu = document.getElementById('pause-menu');
             const gameOverEl = document.getElementById('game-over');
+            const gameContainer = document.querySelector('.game-container');
+            
             if (pauseMenu) {
                 pauseMenu.classList.add('hidden');
             }
+            
+            // Hide game container instructions
+            if (gameContainer) {
+                const instructions = gameContainer.querySelector('.instructions');
+                if (instructions) {
+                    instructions.style.display = 'none';
+                }
+            }
+            
+            // Show game over screen with proper centering
             if (gameOverEl) {
+                // Remove hidden class
                 gameOverEl.classList.remove('hidden');
+                // Force display and visibility with inline styles for proper centering
+                gameOverEl.style.display = 'block';
+                gameOverEl.style.visibility = 'visible';
+                gameOverEl.style.opacity = '1';
+                gameOverEl.style.zIndex = '10000';
+                gameOverEl.style.position = 'fixed';
+                gameOverEl.style.top = '50%';
+                gameOverEl.style.left = '50%';
+                gameOverEl.style.transform = 'translate(-50%, -50%)';
             }
             
             // Show leaderboard submit section if high score and leaderboard available

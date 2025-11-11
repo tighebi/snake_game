@@ -10,7 +10,7 @@ const FlappyGame = {
     gameRunning: false,
     gameStarted: false,
     gamePaused: false,
-    gameOver: false,
+    isGameOver: false,
     animationId: null,
     pipeWidth: 45,
     pipeGap: 180,
@@ -20,6 +20,7 @@ const FlappyGame = {
     frameCount: 0,
     speedIncreaseRate: 0.003,
     difficulty: 'medium',
+    theme: 'default',
     difficulties: {
         easy: {
             baseSpeed: 2.0,
@@ -64,6 +65,9 @@ const FlappyGame = {
         
         // Setup difficulty selector
         this.setupDifficulty();
+        
+        // Setup theme selector
+        this.setupTheme();
         
         // Setup main menu
         this.setupMainMenu();
@@ -128,6 +132,51 @@ const FlappyGame = {
         this.bird.jumpStrength = diff.jumpStrength;
     },
     
+    setupTheme() {
+        const selector = document.getElementById('theme-selector');
+        if (!selector) return;
+        
+        // Load saved theme - check for Storage in parent scope
+        try {
+            if (typeof Storage !== 'undefined' && Storage.loadTheme) {
+                const savedTheme = Storage.loadTheme();
+                if (savedTheme && (savedTheme === 'default' || savedTheme === 'day' || savedTheme === 'night')) {
+                    this.theme = savedTheme;
+                    selector.value = savedTheme;
+                }
+            }
+        } catch (e) {
+            // Storage not available, use default
+            console.log('Storage not available for theme');
+        }
+        
+        // Apply initial theme
+        this.applyTheme(this.theme);
+        
+        selector.addEventListener('change', (e) => {
+            this.theme = e.target.value;
+            this.applyTheme(this.theme);
+            // Save theme
+            try {
+                if (typeof Storage !== 'undefined' && Storage.saveTheme) {
+                    Storage.saveTheme(this.theme);
+                }
+            } catch (e) {
+                // Storage not available, skip saving
+                console.log('Storage not available for theme');
+            }
+        });
+    },
+    
+    applyTheme(theme) {
+        // Remove all theme classes
+        document.body.className = document.body.className.replace(/theme-\w+/g, '');
+        // Add new theme class
+        if (theme !== 'default') {
+            document.body.classList.add(`theme-${theme}`);
+        }
+    },
+    
     setupPauseMenu() {
         const pauseMenu = document.getElementById('pause-menu');
         const resumeBtn = document.getElementById('resume-btn');
@@ -145,18 +194,8 @@ const FlappyGame = {
         
         if (backToMenuBtn) {
             backToMenuBtn.addEventListener('click', () => {
-                // Hide game container
-                const gameContainer = document.querySelector('.game-container');
-                if (gameContainer) {
-                    gameContainer.classList.add('hidden');
-                }
-                // Show main menu
-                const mainMenu = document.getElementById('main-menu');
-                if (mainMenu) {
-                    mainMenu.classList.remove('hidden');
-                }
-                // Reset game
-                this.resetGame();
+                // Navigate to home page
+                window.location.href = '../index.html';
             });
         }
         
@@ -365,7 +404,7 @@ const FlappyGame = {
         this.gameRunning = false;
         this.gameStarted = false;
         this.gamePaused = false;
-        this.gameOver = false;
+        this.isGameOver = false;
         this.frameCount = 0;
         this.pipes = [];
         this.applyDifficulty();
@@ -397,7 +436,7 @@ const FlappyGame = {
     setupControls() {
         const flap = () => {
             // Don't allow control after game over
-            if (this.gameOver) {
+            if (this.isGameOver) {
                 return;
             }
             // Don't allow control when paused (except to resume)
@@ -421,7 +460,7 @@ const FlappyGame = {
         
         // Keyboard
         document.addEventListener('keydown', (e) => {
-            if (e.key === ' ' && !this.gameOver) {
+            if (e.key === ' ' && !this.isGameOver) {
                 e.preventDefault();
                 flap();
             }
@@ -429,7 +468,7 @@ const FlappyGame = {
         
         // Touch
         this.canvas.addEventListener('touchstart', (e) => {
-            if (!this.gameOver) {
+            if (!this.isGameOver) {
                 e.preventDefault();
                 flap();
             }
@@ -448,18 +487,8 @@ const FlappyGame = {
         
         if (menuFromGameOverBtn) {
             menuFromGameOverBtn.addEventListener('click', () => {
-                // Hide game container
-                const gameContainer = document.querySelector('.game-container');
-                if (gameContainer) {
-                    gameContainer.classList.add('hidden');
-                }
-                // Show main menu
-                const mainMenu = document.getElementById('main-menu');
-                if (mainMenu) {
-                    mainMenu.classList.remove('hidden');
-                }
-                // Reset game
-                this.resetGame();
+                // Navigate to home page
+                window.location.href = '../index.html';
             });
         }
     },
@@ -484,7 +513,7 @@ const FlappyGame = {
     
     update() {
         // Don't update if game is over
-        if (this.gameOver) return;
+        if (this.isGameOver) return;
         if (!this.gameRunning || !this.gameStarted || this.gamePaused) return;
         
         this.frameCount++;
@@ -493,22 +522,22 @@ const FlappyGame = {
         this.pipeSpeed = this.basePipeSpeed + (this.frameCount * this.speedIncreaseRate);
         
         // Update bird
-        if (!this.gameOver) {
-            this.bird.velocity += this.bird.gravity;
-            this.bird.y += this.bird.velocity;
-        }
+        this.bird.velocity += this.bird.gravity;
+        this.bird.y += this.bird.velocity;
         
-        // Bird boundaries
-        if (this.bird.y < 0) {
-            this.bird.y = 0;
+        // Bird boundaries - game over if bird hits top or bottom
+        if (this.bird.y < 0 || this.bird.y + this.bird.height > this.canvas.height) {
+            // Clamp bird position to bounds
+            if (this.bird.y < 0) {
+                this.bird.y = 0;
+            }
+            if (this.bird.y + this.bird.height > this.canvas.height) {
+                this.bird.y = this.canvas.height - this.bird.height;
+            }
             this.bird.velocity = 0;
-        }
-        if (this.bird.y + this.bird.height > this.canvas.height) {
-            // Prevent bird from going below canvas
-            this.bird.y = this.canvas.height - this.bird.height;
-            this.bird.velocity = 0;
-            if (!this.gameOver) {
-                this.gameOver();
+            // Call endGame() if not already called
+            if (!this.isGameOver) {
+                this.endGame();
             }
             return;
         }
@@ -530,9 +559,9 @@ const FlappyGame = {
                 continue;
             }
             
-            // Check collision
-            if (this.checkCollision(pipe)) {
-                this.gameOver();
+            // Check collision - make sure endGame() is called
+            if (!this.isGameOver && this.checkCollision(pipe)) {
+                this.endGame();
                 return;
             }
             
@@ -587,11 +616,16 @@ const FlappyGame = {
         return false;
     },
     
-    gameOver() {
+    endGame() {
+        // Prevent multiple calls
+        if (this.isGameOver) {
+            return;
+        }
+        
         this.gameRunning = false;
         this.gameStarted = false;
         this.gamePaused = false;
-        this.gameOver = true; // Set game over flag to prevent controls
+        this.isGameOver = true; // Set game over flag to prevent controls
         
         // Stop bird movement
         this.bird.velocity = 0;
@@ -628,14 +662,37 @@ const FlappyGame = {
             highScoreEl.textContent = highScoreDisplay;
         }
         
-        // Hide pause menu and show game over
+        // Hide pause menu and show game over - ALWAYS SHOW GAME OVER SCREEN
         const pauseMenu = document.getElementById('pause-menu');
         const gameOverEl = document.getElementById('game-over');
+        const gameContainer = document.querySelector('.game-container');
+        
+        // Hide pause menu
         if (pauseMenu) {
             pauseMenu.classList.add('hidden');
         }
+        
+        // Hide game container instructions
+        if (gameContainer) {
+            const instructions = gameContainer.querySelector('.instructions');
+            if (instructions) {
+                instructions.style.display = 'none';
+            }
+        }
+        
+        // ALWAYS show game over screen - this is critical!
         if (gameOverEl) {
+            // Remove hidden class
             gameOverEl.classList.remove('hidden');
+            // Force display and visibility with inline styles
+            gameOverEl.style.display = 'block';
+            gameOverEl.style.visibility = 'visible';
+            gameOverEl.style.opacity = '1';
+            gameOverEl.style.zIndex = '10000';
+            gameOverEl.style.position = 'fixed';
+            gameOverEl.style.top = '50%';
+            gameOverEl.style.left = '50%';
+            gameOverEl.style.transform = 'translate(-50%, -50%)';
         }
         
         // Show leaderboard submit section if high score and leaderboard available

@@ -196,6 +196,48 @@ body.theme-garden .bg-particles {
         radial-gradient(circle at 60% 70%, rgba(64, 192, 87, 0.35) 0%, transparent 40%);
 }
 
+body.theme-day .bg-pattern-1 {
+    background-image: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 20px,
+            rgba(255, 215, 0, 0.03) 20px,
+            rgba(255, 215, 0, 0.03) 40px
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 20px,
+            rgba(255, 165, 0, 0.03) 20px,
+            rgba(255, 165, 0, 0.03) 40px
+        );
+}
+
+body.theme-day .bg-pattern-2 {
+    background-image: 
+        radial-gradient(circle at 1px 1px, rgba(255, 215, 0, 0.15) 1px, transparent 0);
+}
+
+body.theme-day .bg-gradient {
+    background: linear-gradient(
+        45deg,
+        rgba(255, 215, 0, 0.2) 0%,
+        rgba(255, 165, 0, 0.2) 25%,
+        rgba(255, 215, 0, 0.2) 50%,
+        rgba(255, 165, 0, 0.2) 75%,
+        rgba(255, 215, 0, 0.2) 100%
+    );
+}
+
+body.theme-day .bg-particles {
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(255, 165, 0, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 40% 20%, rgba(255, 215, 0, 0.3) 0%, transparent 40%),
+        radial-gradient(circle at 60% 70%, rgba(255, 165, 0, 0.35) 0%, transparent 40%);
+}
+
 body.theme-space .bg-pattern-1 {
     background-image: 
         repeating-linear-gradient(
@@ -438,9 +480,14 @@ body.theme-retro .bg-particles {
 .score-container {
     display: flex;
     justify-content: space-around;
+    gap: 20px;
     font-size: 1.2em;
     font-weight: bold;
     margin-bottom: 10px;
+}
+
+.score-container span {
+    white-space: nowrap;
 }
 
 .customization-section {
@@ -685,6 +732,67 @@ body.theme-garden select option:focus {
     color: #fff !important;
 }
 
+/* Day theme (yellow/orange) */
+body.theme-day .customization-group select,
+body.theme-day #difficulty-selector,
+body.theme-day select {
+    border-color: #ffd700;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffd700' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+
+body.theme-day .customization-group select:hover,
+body.theme-day #difficulty-selector:hover,
+body.theme-day select:hover {
+    border-color: #ffa500;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+body.theme-day .customization-group select:focus,
+body.theme-day #difficulty-selector:focus,
+body.theme-day select:focus {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Day theme options - all options themed */
+body.theme-day .customization-group select option,
+body.theme-day #difficulty-selector option,
+body.theme-day select option {
+    background: rgba(26, 26, 46, 0.98) !important;
+    color: #fff !important;
+    padding: 10px 12px !important;
+    font-size: 0.9em !important;
+}
+
+body.theme-day .customization-group select option:not(:checked),
+body.theme-day #difficulty-selector option:not(:checked),
+body.theme-day select option:not(:checked) {
+    background: rgba(26, 26, 46, 0.98) !important;
+    color: #fff !important;
+}
+
+body.theme-day .customization-group select option:hover,
+body.theme-day #difficulty-selector option:hover,
+body.theme-day select option:hover {
+    background: rgba(255, 215, 0, 0.4) !important;
+    color: #fff !important;
+}
+
+body.theme-day .customization-group select option:checked,
+body.theme-day #difficulty-selector option:checked,
+body.theme-day select option:checked {
+    background: #ffd700 !important;
+    color: #1a1a2e !important;
+    font-weight: bold !important;
+}
+
+body.theme-day .customization-group select option:focus,
+body.theme-day #difficulty-selector option:focus,
+body.theme-day select option:focus {
+    background: rgba(255, 215, 0, 0.5) !important;
+    color: #fff !important;
+}
+
 /* Space theme (blue) */
 body.theme-space .customization-group select,
 body.theme-space #difficulty-selector,
@@ -912,17 +1020,18 @@ body.theme-retro #gameCanvas {
 }
 
 .game-over {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: rgba(0, 0, 0, 0.95) !important;
     padding: 30px;
     border-radius: 10px;
-    z-index: 100;
+    z-index: 10000 !important;
     border: 2px solid #fff;
     min-width: 300px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    display: block !important;
 }
 
 .game-over h2 {
@@ -932,7 +1041,14 @@ body.theme-retro #gameCanvas {
 }
 
 .game-over.hidden {
-    display: none;
+    display: none !important;
+}
+
+/* Ensure game over screen is always visible when not hidden */
+.game-over:not(.hidden) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .game-over-tabs {

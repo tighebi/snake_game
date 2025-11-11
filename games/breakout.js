@@ -12,7 +12,7 @@ const BreakoutGame = {
     gameRunning: false,
     gameStarted: false,
     gamePaused: false,
-    gameOver: false,
+    isGameOver: false,
     animationId: null,
     difficulty: 'medium',
     theme: 'default',
@@ -219,18 +219,8 @@ const BreakoutGame = {
         
         if (backToMenuBtn) {
             backToMenuBtn.addEventListener('click', () => {
-                // Hide game container
-                const gameContainer = document.querySelector('.game-container');
-                if (gameContainer) {
-                    gameContainer.classList.add('hidden');
-                }
-                // Show main menu
-                const mainMenu = document.getElementById('main-menu');
-                if (mainMenu) {
-                    mainMenu.classList.remove('hidden');
-                }
-                // Reset game
-                this.resetGame();
+                // Navigate to home page
+                window.location.href = '../index.html';
             });
         }
         
@@ -436,7 +426,7 @@ const BreakoutGame = {
     
     resetGame() {
         this.score = 0;
-        this.gameOver = false; // Reset game over flag
+        this.isGameOver = false; // Reset game over flag
         this.gameRunning = false;
         this.gameStarted = false;
         this.gamePaused = false;
@@ -524,11 +514,11 @@ const BreakoutGame = {
             mouseX = (e.clientX - rect.left) * scaleX;
             
             // Start game when paddle moves for the first time
-            if (!this.gameStarted && !this.gameOver) {
+            if (!this.gameStarted && !this.isGameOver) {
                 this.startGame();
             }
             
-            if (this.gameRunning && !this.gameOver) {
+            if (this.gameRunning && !this.isGameOver) {
                 this.paddle.x = mouseX - this.paddle.width / 2;
                 this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width, this.paddle.x));
             }
@@ -539,18 +529,18 @@ const BreakoutGame = {
             if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
                 keys.left = true;
                 // Start game when arrow key is pressed for the first time
-                if (!this.gameStarted && !this.gameOver) {
+                if (!this.gameStarted && !this.isGameOver) {
                     this.startGame();
                 }
             }
             if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
                 keys.right = true;
                 // Start game when arrow key is pressed for the first time
-                if (!this.gameStarted && !this.gameOver) {
+                if (!this.gameStarted && !this.isGameOver) {
                     this.startGame();
                 }
             }
-            if (e.key === ' ' && !this.gameStarted && !this.gameOver) {
+            if (e.key === ' ' && !this.gameStarted && !this.isGameOver) {
                 this.startGame();
             }
         });
@@ -573,11 +563,11 @@ const BreakoutGame = {
             const touchX = (touch.clientX - rect.left) * scaleX;
             
             // Start game when touch moves paddle for the first time
-            if (!this.gameStarted && !this.gameOver) {
+            if (!this.gameStarted && !this.isGameOver) {
                 this.startGame();
             }
             
-            if (this.gameRunning && !this.gameOver) {
+            if (this.gameRunning && !this.isGameOver) {
                 // Center paddle on touch position
                 this.paddle.x = touchX - this.paddle.width / 2;
                 this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width, this.paddle.x));
@@ -657,11 +647,11 @@ const BreakoutGame = {
         // Update paddle position based on keys
         setInterval(() => {
             // Start game when arrow key moves paddle for the first time
-            if ((keys.left || keys.right) && !this.gameStarted && !this.gameOver) {
+            if ((keys.left || keys.right) && !this.gameStarted && !this.isGameOver) {
                 this.startGame();
             }
             
-            if (this.gameRunning && !this.gamePaused && !this.gameOver) {
+            if (this.gameRunning && !this.gamePaused && !this.isGameOver) {
                 if (keys.left) {
                     this.paddle.x = Math.max(0, this.paddle.x - this.paddle.speed);
                 }
@@ -684,18 +674,8 @@ const BreakoutGame = {
         
         if (menuFromGameOverBtn) {
             menuFromGameOverBtn.addEventListener('click', () => {
-                // Hide game container
-                const gameContainer = document.querySelector('.game-container');
-                if (gameContainer) {
-                    gameContainer.classList.add('hidden');
-                }
-                // Show main menu
-                const mainMenu = document.getElementById('main-menu');
-                if (mainMenu) {
-                    mainMenu.classList.remove('hidden');
-                }
-                // Reset game
-                this.resetGame();
+                // Navigate to home page
+                window.location.href = '../index.html';
             });
         }
     },
@@ -716,7 +696,7 @@ const BreakoutGame = {
     
     update() {
         // Don't update if game is over
-        if (this.gameOver) return;
+        if (this.isGameOver) return;
         if (!this.gameRunning || !this.gameStarted || this.gamePaused) return;
         
         this.framesSinceStart++;
@@ -850,7 +830,8 @@ const BreakoutGame = {
             if (livesEl) livesEl.textContent = this.lives;
             
             if (this.lives <= 0) {
-                this.gameOver();
+                this.endGame();
+                return;
             } else {
                 // Reset ball silently (no popup) - just pause the game
                 this.ball.x = this.paddle.x + this.paddle.width / 2;
@@ -904,8 +885,13 @@ const BreakoutGame = {
         document.getElementById('pause-instructions').textContent = 'Click or press SPACE to continue';
     },
     
-    gameOver() {
-        this.gameOver = true; // Set game over flag to prevent ball movement
+    endGame() {
+        // Prevent multiple calls
+        if (this.isGameOver) {
+            return;
+        }
+        
+        this.isGameOver = true; // Set game over flag to prevent ball movement
         this.gameRunning = false;
         this.gameStarted = false;
         this.gamePaused = false;
@@ -946,14 +932,37 @@ const BreakoutGame = {
             highScoreEl.textContent = highScoreDisplay;
         }
         
-        // Hide pause menu and show game over
+        // Hide pause menu and show game over - ALWAYS SHOW GAME OVER SCREEN
         const pauseMenu = document.getElementById('pause-menu');
         const gameOverEl = document.getElementById('game-over');
+        const gameContainer = document.querySelector('.game-container');
+        
+        // Hide pause menu
         if (pauseMenu) {
             pauseMenu.classList.add('hidden');
         }
+        
+        // Hide game container instructions
+        if (gameContainer) {
+            const instructions = gameContainer.querySelector('.instructions');
+            if (instructions) {
+                instructions.style.display = 'none';
+            }
+        }
+        
+        // ALWAYS show game over screen - this is critical!
         if (gameOverEl) {
+            // Remove hidden class
             gameOverEl.classList.remove('hidden');
+            // Force display and visibility with inline styles
+            gameOverEl.style.display = 'block';
+            gameOverEl.style.visibility = 'visible';
+            gameOverEl.style.opacity = '1';
+            gameOverEl.style.zIndex = '10000';
+            gameOverEl.style.position = 'fixed';
+            gameOverEl.style.top = '50%';
+            gameOverEl.style.left = '50%';
+            gameOverEl.style.transform = 'translate(-50%, -50%)';
         }
         
         // Show leaderboard submit section if high score and leaderboard available
