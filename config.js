@@ -84,13 +84,31 @@ const POTION_EFFECTS = {
 // 1. Create a free account at https://supabase.com
 // 2. Create a new project
 // 3. Go to SQL Editor and run this SQL to create the table:
-//    CREATE TABLE snake_leaderboard (
+//    CREATE TABLE arcade_leaderboard (
 //        id BIGSERIAL PRIMARY KEY,
 //        name VARCHAR(3) NOT NULL,
 //        score INTEGER NOT NULL,
 //        game_mode VARCHAR(20) NOT NULL,
 //        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 //    );
+//    
+//    -- Create an index for faster queries
+//    CREATE INDEX idx_arcade_leaderboard_mode_score ON arcade_leaderboard(game_mode, score DESC);
+//    
+//    -- Enable Row Level Security (RLS) for public read access
+//    ALTER TABLE arcade_leaderboard ENABLE ROW LEVEL SECURITY;
+//    
+//    -- Create a policy that allows anyone to read the leaderboard
+//    CREATE POLICY "Allow public read access" ON arcade_leaderboard
+//        FOR SELECT
+//        USING (true);
+//    
+//    -- Create a policy that allows anyone to insert scores
+//    CREATE POLICY "Allow public insert" ON arcade_leaderboard
+//        FOR INSERT
+//        WITH CHECK (true);
+//    
+//    Note: game_mode values supported: 'classic', 'powerup', 'breakout', 'flappy', '2048'
 // 4. Go to Settings > API and copy your Project URL and anon public key
 // 5. Replace the values below with your Supabase credentials
 CONFIG.SUPABASE_URL = 'https://uuztspmqpxcwxhkvktfc.supabase.co'; // Your Supabase project URL

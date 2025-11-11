@@ -50,12 +50,13 @@ const Leaderboard = {
                 return { success: false, error: 'Invalid score' };
             }
             
-            // Map game modes to database values
-            const mode = gameMode === 'powerup' ? 'powerup' : 'classic';
+            // Map game modes to database values (support all games)
+            // gameMode can be: 'classic', 'powerup', 'breakout', 'flappy', '2048'
+            const mode = gameMode || 'classic';
             
             // Insert into Supabase
             const { data, error } = await this.client
-                .from('snake_leaderboard')
+                .from('arcade_leaderboard')
                 .insert([
                     {
                         name: name.trim(),
@@ -79,7 +80,7 @@ const Leaderboard = {
     },
     
     // Fetch top scores from the global leaderboard
-    async getLeaderboard(gameMode = 'classic', limit = 10) {
+    async getLeaderboard(gameMode = 'classic', limit = 3) {
         if (!this.client) {
             if (!this.init()) {
                 return { success: false, error: 'Leaderboard not configured', scores: [] };
@@ -87,11 +88,12 @@ const Leaderboard = {
         }
         
         try {
-            const mode = gameMode === 'powerup' ? 'powerup' : 'classic';
+            // gameMode can be: 'classic', 'powerup', 'breakout', 'flappy', '2048'
+            const mode = gameMode || 'classic';
             
             // Fetch top scores from Supabase, ordered by score descending
             const { data, error } = await this.client
-                .from('snake_leaderboard')
+                .from('arcade_leaderboard')
                 .select('name, score, created_at')
                 .eq('game_mode', mode)
                 .order('score', { ascending: false })

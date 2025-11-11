@@ -179,7 +179,7 @@
                                 </div>
                                 <span class="score-value">${bestScoreEntry.score || bestScoreEntry}</span>
                             </div>
-                            ${scores.slice(1, 5).map((scoreEntry, index) => {
+                            ${scores.slice(1, 3).map((scoreEntry, index) => {
                                 const score = typeof scoreEntry === 'number' ? scoreEntry : scoreEntry.score;
                                 const username = typeof scoreEntry === 'number' ? 'Player' : (scoreEntry.username || 'Player');
                                 return `

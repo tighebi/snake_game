@@ -349,10 +349,23 @@ const Menu = {
         this.elements.submitStatus.style.color = '#fff';
         
         try {
+            // Map game mode to database format
+            // Snake game modes: 'classic' -> 'classic', 'powerup' -> 'powerup'
+            // Other games would use their game IDs directly
+            let gameMode = this.currentGameMode;
+            if (gameMode === 'zen') {
+                // Zen mode doesn't submit to leaderboard
+                this.elements.submitStatus.textContent = 'Zen mode scores are not submitted to leaderboard';
+                this.elements.submitStatus.style.color = '#ffa502';
+                this.elements.playerInitialsInput.disabled = false;
+                this.elements.submitScoreBtn.disabled = false;
+                return;
+            }
+            
             const result = await Leaderboard.submitScore(
                 initials,
                 this.currentGameScore,
-                this.currentGameMode
+                gameMode
             );
             
             if (result.success) {
@@ -387,11 +400,16 @@ const Menu = {
         // Update leaderboard title based on game mode
         const leaderboardTitle = document.getElementById('leaderboard-title');
         if (leaderboardTitle) {
-            if (gameMode === 'powerup') {
-                leaderboardTitle.textContent = 'Global Leaderboard - Power-Up Mode';
-            } else {
-                leaderboardTitle.textContent = 'Global Leaderboard - Classic Mode';
-            }
+            // Map game modes to display names
+            const gameNames = {
+                'classic': 'Snake (Classic)',
+                'powerup': 'Snake (Power-Up)',
+                'breakout': 'Breakout',
+                'flappy': 'Flappy Bird',
+                '2048': '2048'
+            };
+            const gameName = gameNames[gameMode] || 'Classic Mode';
+            leaderboardTitle.textContent = `Global Leaderboard - ${gameName}`;
         }
         
         if (typeof Leaderboard === 'undefined' || !Leaderboard.isAvailable()) {
@@ -404,7 +422,7 @@ const Menu = {
             '<p style="text-align: center; opacity: 0.7;">Loading leaderboard...</p>';
         
         try {
-            const result = await Leaderboard.getLeaderboard(gameMode, 10);
+            const result = await Leaderboard.getLeaderboard(gameMode, 3);
             
             if (result.success && result.scores && result.scores.length > 0) {
                 this.elements.globalLeaderboardList.innerHTML = result.scores.map((entry, index) => {

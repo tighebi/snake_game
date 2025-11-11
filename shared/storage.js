@@ -58,7 +58,7 @@ const ArcadeStorage = {
             return scoreB - scoreA;
         });
         
-        scores = scores.slice(0, 10); // Keep top 10
+        scores = scores.slice(0, 3); // Keep top 3
         
         localStorage.setItem(key, JSON.stringify(scores));
         return scores;

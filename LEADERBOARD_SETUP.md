@@ -1,6 +1,6 @@
 # Global Leaderboard Setup Guide
 
-This guide will help you set up the global leaderboard feature for the Snake game using Supabase.
+This guide will help you set up the global leaderboard feature for all arcade games using Supabase.
 
 ## Prerequisites
 
@@ -22,10 +22,10 @@ This guide will help you set up the global leaderboard feature for the Snake gam
 
 1. In your Supabase project, go to the "SQL Editor" in the left sidebar
 2. Click "New Query"
-3. Paste the following SQL code:
+3. Paste the following SQL code: 
 
 ```sql
-CREATE TABLE snake_leaderboard (
+CREATE TABLE arcade_leaderboard (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(3) NOT NULL,
     score INTEGER NOT NULL,
@@ -34,21 +34,28 @@ CREATE TABLE snake_leaderboard (
 );
 
 -- Create an index for faster queries
-CREATE INDEX idx_snake_leaderboard_mode_score ON snake_leaderboard(game_mode, score DESC);
+CREATE INDEX idx_arcade_leaderboard_mode_score ON arcade_leaderboard(game_mode, score DESC);
 
 -- Enable Row Level Security (RLS) for public read access
-ALTER TABLE snake_leaderboard ENABLE ROW LEVEL SECURITY;
+ALTER TABLE arcade_leaderboard ENABLE ROW LEVEL SECURITY;
 
 -- Create a policy that allows anyone to read the leaderboard
-CREATE POLICY "Allow public read access" ON snake_leaderboard
+CREATE POLICY "Allow public read access" ON arcade_leaderboard
     FOR SELECT
     USING (true);
 
 -- Create a policy that allows anyone to insert scores
-CREATE POLICY "Allow public insert" ON snake_leaderboard
+CREATE POLICY "Allow public insert" ON arcade_leaderboard
     FOR INSERT
     WITH CHECK (true);
 ```
+
+**Note:** The `game_mode` field supports the following values:
+- `classic` - Snake (Classic Mode)
+- `powerup` - Snake (Power-Up Mode)
+- `breakout` - Breakout game
+- `flappy` - Flappy Bird game
+- `2048` - 2048 game
 
 4. Click "Run" to execute the SQL
 5. You should see a success message
@@ -77,10 +84,11 @@ CONFIG.SUPABASE_ANON_KEY = 'your-anon-key-here'; // Your anon/public key
 ## Step 5: Test the Leaderboard
 
 1. Open your game in a web browser
-2. Play a game and get a score
-3. When the game ends, you should see an input field for your initials
+2. Play a game (Snake, Breakout, Flappy Bird, or 2048) and get a score
+3. When the game ends, you should see an input field for your initials (Snake game only for now)
 4. Enter your initials (up to 3 letters) and click "Submit Score"
-5. Click on the "Global Leaderboard" tab to see your score (and others if any)
+5. Click on the "Global Leaderboard" tab to see your score (top 3 scores per game)
+6. The leaderboard shows the top 3 scores for each game mode
 
 ## Troubleshooting
 
@@ -100,8 +108,9 @@ CONFIG.SUPABASE_ANON_KEY = 'your-anon-key-here'; // Your anon/public key
 ### Scores not appearing in leaderboard
 
 - Refresh the leaderboard tab
-- Check that scores are being inserted into the database (go to Supabase > Table Editor > snake_leaderboard)
-- Verify that the game_mode matches when fetching (classic vs powerup)
+- Check that scores are being inserted into the database (go to Supabase > Table Editor > arcade_leaderboard)
+- Verify that the game_mode matches when fetching (classic, powerup, breakout, flappy, or 2048)
+- The leaderboard only displays the top 3 scores per game mode
 
 ## Security Notes
 
@@ -117,26 +126,31 @@ CONFIG.SUPABASE_ANON_KEY = 'your-anon-key-here'; // Your anon/public key
 If you expect many scores, you can add additional indexes:
 
 ```sql
-CREATE INDEX idx_snake_leaderboard_created_at ON snake_leaderboard(created_at DESC);
+CREATE INDEX idx_arcade_leaderboard_created_at ON arcade_leaderboard(created_at DESC);
 ```
 
 ### Clean Up Old Scores
 
-To keep only the top 1000 scores per mode, you can create a function:
+To keep only the top 3 scores per game mode (matching the display limit), you can create a function:
 
 ```sql
 CREATE OR REPLACE FUNCTION cleanup_old_scores()
 RETURNS void AS $$
 BEGIN
-    DELETE FROM snake_leaderboard
+    -- Keep only top 3 scores per game_mode
+    DELETE FROM arcade_leaderboard
     WHERE id NOT IN (
-        SELECT id FROM snake_leaderboard
-        ORDER BY score DESC
-        LIMIT 1000
+        SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY game_mode ORDER BY score DESC) as rn
+            FROM arcade_leaderboard
+        ) ranked
+        WHERE rn <= 3
     );
 END;
 $$ LANGUAGE plpgsql;
 ```
+
+**Note:** The leaderboard is configured to show only the top 3 scores per game mode to keep it competitive and focused on the best players.
 
 ## Support
 
@@ -146,5 +160,16 @@ If you encounter any issues:
 3. Verify your database table structure matches the SQL above
 4. Make sure your Supabase project is not paused
 
-Happy gaming! 🐍🎮
+## Supported Games
+
+The leaderboard currently supports the following games:
+- **Snake (Classic)** - Classic snake game mode
+- **Snake (Power-Up)** - Snake game with power-ups
+- **Breakout** - Break all the bricks!
+- **Flappy Bird** - Navigate through obstacles
+- **2048** - Slide tiles to combine numbers
+
+Each game mode maintains its own top 3 leaderboard.
+
+Happy gaming! 🎮🏆
 
